@@ -182,17 +182,19 @@ RBtree<string> *processFiles(List<string> *files){
 	List<string> *x = files;	
 	RBtree<string> *temp = new RBtree<string>;
 	ifstream inFile[files->size];
-	cout << x->size << endl;
 	int i = 0, tam = x->size;
+
 	//Abre arquivos com os nomes contidos na lista 
 	while(x != NULL){
 		if(i == tam) break;
 		inFile[i].open((x->item).c_str(), ios::in);				
+
 		cout << "Processing " << (x->item).c_str() << "..." << endl;
 		if(!inFile[i]){
 			cerr << "\033[1;31mFile could not be opened.\033[0m\n" << endl;
 			exit(1);
 		} 
+
 		string word;		
 		//Coloca as palavras do arquivo na estrutura		
 		while(inFile[i] >> word){
@@ -205,7 +207,6 @@ RBtree<string> *processFiles(List<string> *files){
 		inFile[i].clear();
 		x = x->next;
 		i++;
-		cout << i << " " << x->size << endl;
  	}
 	return temp;
 }
