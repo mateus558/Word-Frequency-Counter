@@ -3,9 +3,9 @@
 
 template <typename T> struct NODE{
 	T key;
-	NODE *dir;
-	NODE *esq;
-	NODE *pai;
+	NODE *right;
+	NODE *left;
+	NODE *p;
 	int count;
 	bool ehVermelho;
 
