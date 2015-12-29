@@ -24,10 +24,12 @@ RBtree<string> *processFiles(List<string> *files);
 List<string>* selectFiles();
 void process_mem_usage(double& vm_usage, double& resident_set);
 
+string def = " ";
+
 int main(){
 	clear();
 	bool erro = false;
-	RBtree<string> *DB("");
+	RBtree<string> *DB;
 	List<string> *files2Process= new List<string>;
 	showMenu(files2Process->getSize());
 	int o;	
@@ -180,7 +182,7 @@ List<string>* selectFiles(){
 
 RBtree<string> *processFiles(List<string> *files){
 	List<string> *x = files;	
-	RBtree<string> *temp = new RBtree<string>("");
+	RBtree<string> *temp = new RBtree<string>(def);
 	ifstream inFile[files->size];
 	int i = 0, tam = x->size;
 

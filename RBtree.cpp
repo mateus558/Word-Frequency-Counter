@@ -14,11 +14,13 @@ template <class T> RBtree<T>::RBtree(T def_val){
 	root->dir = root->esq = root->pai = nill;
 	root->ehVermelho = false;
 	root->key = def_val;
+	N = 0;
 }
 
 template <class T> NODE<T>* RBtree<T>::tree_insert(T key){
 	NODE<T> *y = this->nill;
 	NODE<T> *x = this->root;
+	N++;
 	while(*x != *nill){
 		y = x;
 		if(key < x->key){
@@ -33,8 +35,8 @@ template <class T> NODE<T>* RBtree<T>::tree_insert(T key){
 	NODE<T> *z = new NODE<T>;
 	z->key = key;
 	z->pai = y;
-	z->dir = new NODE<T>;
-	z->esq = new NODE<T>;
+	z->dir = this->nill;
+	z->esq = this->nill;
 	if(*y == *nill){
 		this->root = z;
 	}else if(key < y->key){
@@ -122,7 +124,7 @@ template <class T> void RBtree<T>::RB_insert(T key){
 	}	
 	//cout << z->key << " " << z->pai->key << endl;
 	z->ehVermelho = true;	
-	RB_insertFixUp(z);
+	//RB_insertFixUp(z);
 }
 
 template <class T> bool RBtree<T>::search(T val){

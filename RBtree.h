@@ -26,6 +26,7 @@ template <class T> class RBtree{
 private:
 	NODE<T> *root;
 	NODE<T> *nill;
+	int N;
 	void INORDER_TREE_WALK(NODE<T> *root);
 	void RB_insertFixUp(NODE<T> *&z);
 	NODE<T>* tree_insert(T key);	
@@ -37,6 +38,7 @@ public:
 	RBtree(T def_val);
 	void RB_insert(T key);
 	bool search(T val);
+	int getN(){return N;}
 	void display();
 	~RBtree();
 };
