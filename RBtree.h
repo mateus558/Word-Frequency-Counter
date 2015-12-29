@@ -1,35 +1,31 @@
-#ifndef RBTREE_H
-#define RBTREE_H
+#ifndef RBTREE_H_
+#define RBTREE_H_
 
-template <class T> struct NODE{
+template <typename T> struct NODE{
 	T key;
-	NODE<T> *dir;
-	NODE<T> *esq;
-	NODE<T> *pai;
+	NODE *dir;
+	NODE *esq;
+	NODE *pai;
 	int count;
 	bool ehVermelho;
+
+	/*      ----------
+		Operadores 
+		----------     		*/
+	//Retorna true se os nodes sao iguais	
 	bool operator ==(const NODE& node){		
-		if(this->key == node.key && this->ehVermelho == node.ehVermelho)
-			return true;
-		return false;
+		return this->key == node.key;
 	}
+	//Retorna true se os nodes sao diferentes
 	bool operator !=(const NODE& node){		
-		if(this->key == node.key && this->ehVermelho == node.ehVermelho)
-			return false;
-		return true;
+		return this->key != node.key;
 	}
-	
-	NODE(){
-		count = 0;
-		ehVermelho = false;
-	}	
 };
 
 template <class T> class RBtree{
 private:
 	NODE<T> *root;
 	NODE<T> *nill;
-	int n;
 	void INORDER_TREE_WALK(NODE<T> *root);
 	void RB_insertFixUp(NODE<T> *&z);
 	NODE<T>* tree_insert(T key);	
@@ -38,11 +34,10 @@ private:
 	void aux_delete(NODE<T> *&root);
 
 public:
-	RBtree();
+	RBtree(T def_val);
 	void RB_insert(T key);
 	bool search(T val);
 	void display();
-	int getN(){return this->n;}
 	~RBtree();
 };
 

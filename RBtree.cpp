@@ -3,30 +3,27 @@
 
 using namespace std; 
 
-template <class T> RBtree<T>::RBtree(){
-	this->nill = new NODE<T>;
-	this->nill->dir = new NODE<T>;
-	this->nill->esq = new NODE<T>;
-	this->root = this->nill;
-	this->n = 0;
-}
+template <class T> bool operator <(const T& key, const T& key1){return key < key1;}
 
-template <class T> bool operator <(const T& key, const T& key1){		
-	if(key < key1)
-		return true;
-	return false;
+template <class T> RBtree<T>::RBtree(T def_val){
+	this->nill = new NODE<T>;
+	nill->dir = nill->esq = nill->pai = nill;
+	nill->ehVermelho = false;
+	nill->key = def_val;
+	this->root = new NODE<T>;
+	root->dir = root->esq = root->pai = nill;
+	root->ehVermelho = false;
+	root->key = def_val;
 }
 
 template <class T> NODE<T>* RBtree<T>::tree_insert(T key){
 	NODE<T> *y = this->nill;
 	NODE<T> *x = this->root;
-	this->n++;
 	while(*x != *nill){
 		y = x;
 		if(key < x->key){
 			x = x->esq;
 		}else if(key == x->key){
-			//cout << 1 << " " << endl;
 			x->count++;
 			return NULL;
 		}else{
@@ -50,9 +47,9 @@ template <class T> void RBtree<T>::leftRotate(NODE<T> *&x){
 	NODE<T> *y = x->dir;
 	x->dir = y->esq;
 	if(*y->esq != *this->nill){
-		x->dir->pai = y;
+		y->esq->pai = y;
 	}
-	x->pai = y->pai;
+	y->pai = x->pai;
 	if(*y->pai == *this->nill){
 		this->root = x;
 	}else if(*y == *y->pai->dir){
@@ -65,16 +62,16 @@ template <class T> void RBtree<T>::leftRotate(NODE<T> *&x){
 template <class T> void RBtree<T>::rightRotate(NODE<T> *&y){
 	NODE<T> *x = y->esq;
 	y->esq = x->dir;
-	if(*x->dir != *this->nill){
-		y->esq->pai = x;
+	if(*x->dir != *nill){
+		x->dir->pai = x;
 	}
-	y->pai = x->pai;
-	if(*x->pai == *this->nill){
+	x->pai = y->pai;
+	if(*x->pai == *nill){
 		this->root = y;
 	}else if(*x == *x->pai->esq){
 		x->pai->esq = y;
 	}else x->pai->dir = y;
-	y->dir = x;
+	y->esq = x;
 	x->pai = y;
 }
 
@@ -82,14 +79,13 @@ template <class T> void RBtree<T>::RB_insertFixUp(NODE<T> *&z){
 	while(z->pai->ehVermelho && (*z != *this->root)){
 		if(*z->pai == *z->pai->pai->esq){
 			//Pai de z eh no esquerdo, entao o tio eh direito			
-			NODE<T> *avo = z->pai->pai;
-			NODE<T> *tio = avo->dir;
+			NODE<T> *tio = z->pai->pai->dir;
 			if(tio->ehVermelho){
 			//Caso 1 - Tio eh vermelho, entao troca cores				
 				z->pai->ehVermelho = false;
 				tio->ehVermelho = false;
-				avo->ehVermelho = true;
-				z = avo;
+				z->pai->pai->ehVermelho = true;
+				z = z->pai->pai;
 			}else if(*z == *z->pai->dir){
 				//Caso 2 - Tio eh preto, entao faz rotacao 
 				z = z->pai;
@@ -97,24 +93,23 @@ template <class T> void RBtree<T>::RB_insertFixUp(NODE<T> *&z){
 			}
 			//Caso 3
 			z->pai->ehVermelho = false;
-			avo->ehVermelho = true;
-			rightRotate(avo);
+			z->pai->pai->ehVermelho = true;
+			rightRotate(z->pai->pai);
 		}else{
 			//Simetrico ao if, trocando esq por dir
 			NODE<T> *tio = z->pai->pai->esq;
-			NODE<T> *avo = z->pai->pai;
 			if(tio->ehVermelho){
 				z->pai->ehVermelho = false;
 				tio->ehVermelho = false;
-				avo->ehVermelho = true;
-				z = avo;
+				z->pai->pai->ehVermelho = true;
+				z = z->pai->pai;
 			}else if(*z == *z->pai->esq){
 				z = z->pai;
 				rightRotate(z);
 			}
 			z->pai->ehVermelho = false;
-			avo->ehVermelho = true;
-			leftRotate(avo);
+			z->pai->pai->ehVermelho = true;
+			leftRotate(z->pai->pai);
 		}
 	}
 	this->root->ehVermelho = false;
@@ -127,7 +122,7 @@ template <class T> void RBtree<T>::RB_insert(T key){
 	}	
 	//cout << z->key << " " << z->pai->key << endl;
 	z->ehVermelho = true;	
-	//RB_insertFixUp(z);
+	RB_insertFixUp(z);
 }
 
 template <class T> bool RBtree<T>::search(T val){
