@@ -162,18 +162,18 @@ int main(){
 }
 //Mostra o menu principal
 void showMenu(int sizeList){
-	cout << "\t-----------------------------------------------------------------------"<< endl;
-	cout << "\t|                                UFJF                                 |" <<endl;
-	cout << "\t|                                                                     |" << endl;
-	cout << "\t|\t\t\tWord frequency counter V1.0                   |" << endl;
-	cout << "\t|                                                                     |" << endl;	
-	cout << "\t|                                                                     |" << endl;
-	cout << "\t|By: Mateus C. Marim                                                  |" << endl;
-	cout << "\t|                                                                     |" << endl;
-	cout << "\t-----------------------------------------------------------------------"<< endl;
+	cout << "\t\033[42;30m-----------------------------------------------------------------------\033[0m"<< endl;
+	cout << "\t\033[42;30m|                                UFJF                                 |\033[0m" <<endl;
+	cout << "\t\033[42;30m|                                                                     |\033[0m" << endl;
+	cout << "\t\033[42;30m|\t\t\tWord frequency counter V1.0                   |\033[0m" << endl;
+	cout << "\t\033[42;30m|                                                                     |\033[0m" << endl;	
+	cout << "\t\033[42;30m|                                                                     |\033[0m" << endl;
+	cout << "\t\033[42;30m|By: Mateus C. Marim                                                  |\033[0m" << endl;
+	cout << "\t\033[42;30m|                                                                     |\033[0m" << endl;
+	cout << "\t\033[42;30m-----------------------------------------------------------------------\033[0m"<< endl;
 	cout << endl;
 	cout << endl;
-	cout << "Options:" << endl;
+	cout << "\t\033[102;30mOptions:                                                               \033[0m" << endl;
 	cout << endl;
 	cout << "\t1 - Select files to process" << endl;
 	if(sizeList > 0){
@@ -209,7 +209,6 @@ template <class T> void displayList(List<T> *l){
 }
 
 bool validFile(string file){
-	cout << file << endl;
 	if(file.empty() || file.size() < 4)
 		return false;
 	string test = ".txt";
