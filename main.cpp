@@ -28,8 +28,8 @@ template <class T> void displayList(List<T> *l);
 set *processFiles(List<string> *files);
 void selectFiles();
 void removeSpecialChars(string *word);
-void merge(int p, int q, int r);
-void mergeSort(int p, int r);
+void merge(NODE<string> **arr, int l, int m, int r);
+void mergeSort(NODE<string> **arr, int l, int r);
 bool validFile(string file);
 void process_mem_usage(double& vm_usage, double& resident_set);
 
@@ -78,7 +78,7 @@ int main(){
 					//Retorna uma lista com os nós ordenados lexicograficamente
 					sortedNodes = DB->getSortedList();
 					//Ordena os nos por frequencia mantendo a ordem em que aparecem					
-					mergeSort(0, sortedNodes->count); 	
+					mergeSort(sortedNodes->array, 0, sortedNodes->count-1);
 					finish = clock();
 					/*for(int i = 0; i < sortedNodes->count; i++){
 						cout << sortedNodes->array[i]->key << " - " << sortedNodes->array[i]->count << endl;
@@ -127,9 +127,9 @@ int main(){
 			case 4:
 				if(files2Process->getSize() > 0){			
 					clear();	
-					for(int i = 0; i < sortedNodes->count; i++){
-						if(sortedNodes->array[i]->count == 1)
-							cout << sortedNodes->array[i]->key << " - " << sortedNodes->array[i]->count << endl; 
+					int i  = 0;
+					while(sortedNodes->array[i]->count == 1){
+						cout << sortedNodes->array[i]->key << " - " << sortedNodes->array[i]->count << endl; 					i++;
 					}
 					cout << "\nPress anything and ENTER to go back to menu..." << endl; 
 					char a;					
@@ -171,8 +171,8 @@ void showMenu(int sizeList){
 	cout << "\t\033[42;30m|By: Mateus C. Marim                                                  |\033[0m" << endl;
 	cout << "\t\033[42;30m|                                                                     |\033[0m" << endl;
 	cout << "\t\033[42;30m-----------------------------------------------------------------------\033[0m"<< endl;
-	cout << endl;
-	cout << endl;
+	cout << "\t\033[102;30m                                                                       \033[0m" << endl;
+	cout << "\t\033[102;30m                                                                       \033[0m" << endl;
 	cout << "\t\033[102;30mOptions:                                                               \033[0m" << endl;
 	cout << endl;
 	cout << "\t1 - Select files to process" << endl;
@@ -227,6 +227,7 @@ void selectFiles(){
 	cin >> a;
 	if(a == 'n')
 		return;
+	files2Process = new List<string>;
 	//Abre o diretório com os arquivos para serem processados
 	dpdf = opendir("./Input");
 	if(dpdf != NULL){
@@ -281,31 +282,54 @@ void removeSpecialChars(string *word){
 	word->resize(remove_if(word->begin(), word->end(),[](char x){return !isalnum(x) && !isspace(x);})-word->begin());
 }
 
-void merge(int p, int q, int r){
-	int i, j , k;
-	NODE<string>** w = new NODE<string>*[r-p];
-	for(int n = 0; n < (r-p); n++){
-		w[n] = NULL;
-	}	
-	i = p; j = q;
-	k = 0;
-	while(i < q && j < r){
-		if(sortedNodes->array[i]->count <= sortedNodes->array[j]->count) w[k++] = sortedNodes->array[i++];
-		else w[k++] = sortedNodes->array[j++];
-	}
-	while(i < q) w[k++] = sortedNodes->array[i++];
-	while(j < r) w[k++] = sortedNodes->array[j++];
-	for(i = p; i < r; ++i) sortedNodes->array[i] = w[i - p];
+void merge(NODE<string> **arr, int l, int m, int r){
+    int i, j, k;
+    int n1 = m - l + 1;
+    int n2 =  r - m;
+ 
+    /* create temp arrays */
+    NODE<string> *L[n1], *R[n2];
+ 
+    /* Copy data to temp arrays L[] and R[] */
+    for(i = 0; i < n1; i++) L[i] = arr[l + i];
+    for(j = 0; j < n2; j++) R[j] = arr[m + 1+ j];
+ 
+    /* Merge the temp arrays back into arr[l..r]*/
+    i = 0; j = 0; k = l;
+    while (i < n1 && j < n2){
+        if (L[i]->count <= R[j]->count){
+            arr[k] = L[i];
+            i++;
+        }
+        else{
+            arr[k] = R[j];
+            j++;
+        }
+        k++;
+    }
+ 
+    /* Copy the remaining elements of L[], if there are any */
+    while (i < n1){
+        arr[k] = L[i];
+        i++; k++;
+    }
+ 
+    /* Copy the remaining elements of R[], if there are any */
+    while (j < n2){
+        arr[k] = R[j];
+        j++; k++;
+    }
 }
-
-void mergeSort(int p, int r){
-	if(p < r){
-	//	cout << "a" << endl;
-		int q = (p + r)/2;
-		mergeSort(p, q);
-		mergeSort(q + 1, r);
-		merge(p, q, r);
-	}
+ 
+/* l is for left index and r is right index of the sub-array
+  of arr to be sorted */
+void mergeSort(NODE<string> **arr, int l, int r){
+    if (l < r){
+        int m = l+(r-l)/2; //Same as (l+r)/2, but avoids overflow for large l and h
+        mergeSort(arr, l, m);
+        mergeSort(arr, m+1, r);
+        merge(arr, l, m, r);
+    }
 }
 //////////////////////////////////////////////////////////////////////////////
 //
