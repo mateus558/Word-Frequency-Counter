@@ -32,9 +32,9 @@ void mergeSort(int p, int r);
 void process_mem_usage(double& vm_usage, double& resident_set);
 
 string def = " ";
-Container<string> *sortedNodes;
-List<string> *files2Process;
-set *DB;
+Container<string> *sortedNodes;	//Container para receber os nos ordenados
+List<string> *files2Process;	//Lista para os arquivos a serem processados
+set *DB;	//Conjunto para adicionar as palavras (Arvore vermelho-preta)
 
 int main(){
 	clear();
@@ -238,7 +238,7 @@ set *processFiles(List<string> *files){
 	//Abre arquivos contidos na lista
 	while(x != NULL){
 		if(i == tam) break;
-		inFile[i].open((x->item).c_str(), ios::in);				
+		inFile[i].open(string("Input/") + (x->item).c_str(), ios::in);				
 
 		cout << "Processing " << (x->item).c_str() << "..." << endl;
 		if(!inFile[i]){
@@ -261,7 +261,7 @@ set *processFiles(List<string> *files){
  	}
 	return temp;
 }
-
+//Funcao para remocao de caracteres especiais
 void removeSpecialChars(string *word){
 	word->resize(remove_if(word->begin(), word->end(),[](char x){return !isalnum(x) && !isspace(x);})-word->begin());
 }
