@@ -10,6 +10,8 @@
 
 using namespace std;
 
+typedef RBtree<string> set;
+
 template <class T> struct List{
 	T item;
 	int size;
@@ -22,21 +24,22 @@ void showMenu(int sizeList);
 void clear();
 template <class T> List<T>* add(List<T> *l, T key);
 template <class T> void displayList(List<T> *l);
-RBtree<string> *processFiles(List<string> *files);
+set *processFiles(List<string> *files);
 List<string>* selectFiles();
 void removeSpecialChars(string *word);
-void merge(NODE<string> **&A, int p, int q, int r);
-void mergeSort(NODE<string> **&A, int p, int r);
+void merge(int p, int q, int r);
+void mergeSort(int p, int r);
 void process_mem_usage(double& vm_usage, double& resident_set);
 
 string def = " ";
+Container<string> *sortedNodes;
+List<string> *files2Process;
+set *DB;
 
 int main(){
 	clear();
-	bool erro = false;
-	RBtree<string> *DB;
-	Container<string> *sortedNodes;
-	List<string> *files2Process= new List<string>;
+	bool erro = false;	
+	files2Process = new List<string>;
 	showMenu(files2Process->getSize());
 	int o;	
 	while(1){
@@ -45,23 +48,31 @@ int main(){
 			cout << endl;			
 			erro = false;		
 		}
-		cout << "> ";
+		double vm= 0.0, re = 0.0;
+		//Mostra o consumo de memória do programa
+		process_mem_usage(vm, re);
+		cout << "VM: " << vm << "Kb | RSS: " << re << "Kb"<< endl;
+		cout << "\n> ";
 		cin >> o;
 		switch(o){
 			case 1:
-				//The user select the files to be processed
+				//O usuário seleciona os arquivos para processamento
 				clear();
 				files2Process = selectFiles();
 				cout << "Do you want to proceed? (y/n): ";
 				char a;	
 				cin >> a;
-				//If the user continue with the files the DB is loaded else the operation is canceled
+				//Se o usuário escolhe continuar com os arquivos eles são processados senao a operação é cancelada
 				if(a == 'y'){
+					//Cria variáveis para contar o tempo de execução das ações
 					clock_t start, finish;
 					start = clock();
+					//Coloca os dados processados no conjunto
 					DB = processFiles(files2Process); 
-					sortedNodes = DB->getSortedList();					
-					mergeSort(sortedNodes->array, 0, sortedNodes->count); 	
+					//Retorna uma lista com os nós ordenados lexicograficamente
+					sortedNodes = DB->getSortedList();
+					//Ordena os nos por frequencia mantendo a ordem em que aparecem					
+					mergeSort(0, sortedNodes->count); 	
 					finish = clock();
 					/*for(int i = 0; i < sortedNodes->count; i++){
 						cout << sortedNodes->array[i]->key << " - " << sortedNodes->array[i]->count << endl;
@@ -69,11 +80,9 @@ int main(){
 					double time = ((double)(finish - start))/CLOCKS_PER_SEC;
 					clear();
 					showMenu(files2Process->getSize());				
+					//Dados sobre o carregamento do conjunto								
 					cout << "\033[1;34mDB loaded in " << time << "\033[1;34m seconds.\033[0m\n" << endl;					//DB->display();					
-					double vm = 0.0, re= 0.0;
-					process_mem_usage(vm, re);
 					cout << DB->getN() << " palavras unicas.\n" << endl;
-					cout << "VM: " << vm << "Kb | RSS: " << re << "Kb"<< endl;
 				}else{
 					files2Process = new List<string>;
 					clear();
@@ -145,7 +154,7 @@ int main(){
 		}
 	}
 }
-
+//Mostra o menu principal
 void showMenu(int sizeList){
 	cout << "\t-----------------------------------------------------------------------"<< endl;
 	cout << "\t|                                UFJF                                 |" <<endl;
@@ -160,22 +169,22 @@ void showMenu(int sizeList){
 	cout << endl;
 	cout << "Options:" << endl;
 	cout << endl;
-	cout << "1 - Select files to process" << endl;
+	cout << "\t1 - Select files to process" << endl;
 	if(sizeList > 0){
-		cout << "2 - X more frequent words in all DB" << endl;
-		cout << "3 - X more frequent words in specific DB" << endl;
-		cout << "4 - All words that occur only one time" << endl;
-		cout << "5 - Exit program" << endl;
+		cout << "\t2 - X more frequent words in all DB" << endl;
+		cout << "\t3 - X more frequent words in specific DB" << endl;
+		cout << "\t4 - All words that occur only one time" << endl;
+		cout << "\t5 - Exit program" << endl;
 	}else{
-		cout << "2 - Exit program" << endl;
+		cout << "\t2 - Exit program" << endl;
 	}
 	cout << endl;
 }
-
+//Limpa a tela
 void clear(){
 	for(int i = 0; i < 40; i++) cout << endl;
 }
-
+//Adiciona items em lista encadeada
 template <class T> List<T>* add(List<T> *l, T key){
 	List<T> *e = new List<T>;
 	e->item = key;
@@ -183,7 +192,7 @@ template <class T> List<T>* add(List<T> *l, T key){
 	e->size = l->size+1;
 	return e;
 }
-
+//Mostra o conteúdo de uma lista encadeada
 template <class T> void displayList(List<T> *l){
 	List<string> *x = l;
 	while(x != NULL){
@@ -197,32 +206,36 @@ List<string>* selectFiles(){
 	cout << "Inform the txt with the name of the files you want to process. (The files must be in the directory of the program)" << endl;
 	List<string> *files = new List<string>;
 	string file;
+	//Pede ao usuário o txt com o nome dos arquivos a serem processados
 	cout << "\nTXT with the names of the files: " << endl;
 	string txt;
 	cout << "> ";
 	cin >> txt;
 	ifstream names(txt.c_str(), ios::in);
+	//Encerra o programa caso o arquivo não possa ser aberto
 	if(!names){
 		cerr << "\033[1;31mFile could not be opened.\033[0m\n" << endl;
 		exit(1);
 	}
 	string name;
+	//Adiciona o nome dos arquivos em uma lista
 	while(names >> name){
 		files = add(files, name);
 	}
+	//Mostra ao usuário os arquivos escolhidos para processamento
 	cout << "\n-Selected files:\n";
 	displayList(files);
 	cout << "\n" << files->size << " files found..." << endl;
 	return files; 	
 }
 
-RBtree<string> *processFiles(List<string> *files){
+set *processFiles(List<string> *files){
 	List<string> *x = files;	
-	RBtree<string> *temp = new RBtree<string>(def);
+	set *temp = new set(def);
 	ifstream inFile[files->size];
 	int i = 0, tam = x->size;
 
-	//Abre arquivos com os nomes contidos na lista 
+	//Abre arquivos contidos na lista
 	while(x != NULL){
 		if(i == tam) break;
 		inFile[i].open((x->item).c_str(), ios::in);				
@@ -236,9 +249,7 @@ RBtree<string> *processFiles(List<string> *files){
 		string word;		
 		//Coloca as palavras do arquivo na estrutura		
 		while(inFile[i] >> word){
-			//double vm = 0.0, re= 0.0;
-			//process_mem_usage(vm, re);
-			//cout << "VM: " << vm << "Kb | RSS: " << re << "Kb"<< endl;
+			//Remove caracteres especiais das palavras
 			removeSpecialChars(&word);
 			if(!word.empty())
 				temp->RB_insert(word);
@@ -255,7 +266,7 @@ void removeSpecialChars(string *word){
 	word->resize(remove_if(word->begin(), word->end(),[](char x){return !isalnum(x) && !isspace(x);})-word->begin());
 }
 
-void merge(NODE<string> **&A, int p, int q, int r){
+void merge(int p, int q, int r){
 	int i, j , k;
 	NODE<string>** w = new NODE<string>*[r-p];
 	for(int n = 0; n < (r-p); n++){
@@ -264,21 +275,21 @@ void merge(NODE<string> **&A, int p, int q, int r){
 	i = p; j = q;
 	k = 0;
 	while(i < q && j < r){
-		if(A[i]->count <= A[j]->count) w[k++] = A[i++];
-		else w[k++] = A[j++];
+		if(sortedNodes->array[i]->count <= sortedNodes->array[j]->count) w[k++] = sortedNodes->array[i++];
+		else w[k++] = sortedNodes->array[j++];
 	}
-	while(i < q) w[k++] = A[i++];
-	while(j < r) w[k++] = A[j++];
-	for(i = p; i < r; ++i) A[i] = w[i - p];
+	while(i < q) w[k++] = sortedNodes->array[i++];
+	while(j < r) w[k++] = sortedNodes->array[j++];
+	for(i = p; i < r; ++i) sortedNodes->array[i] = w[i - p];
 }
 
-void mergeSort(NODE<string> **&A, int p, int r){
+void mergeSort(int p, int r){
 	if(p < r){
 	//	cout << "a" << endl;
 		int q = (p + r)/2;
-		mergeSort(A, p, q);
-		mergeSort(A, q + 1, r);
-		merge(A, p, q, r);
+		mergeSort(p, q);
+		mergeSort(q + 1, r);
+		merge(p, q, r);
 	}
 }
 //////////////////////////////////////////////////////////////////////////////
