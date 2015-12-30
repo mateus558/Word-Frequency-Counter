@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <dirent.h>
 #include <fstream>
 #include <ctime>
 #include <unistd.h>
@@ -25,16 +26,19 @@ void clear();
 template <class T> List<T>* add(List<T> *l, T key);
 template <class T> void displayList(List<T> *l);
 set *processFiles(List<string> *files);
-List<string>* selectFiles();
+void selectFiles();
 void removeSpecialChars(string *word);
 void merge(int p, int q, int r);
 void mergeSort(int p, int r);
+bool validFile(string file);
 void process_mem_usage(double& vm_usage, double& resident_set);
 
 string def = " ";
 Container<string> *sortedNodes;	//Container para receber os nos ordenados
 List<string> *files2Process;	//Lista para os arquivos a serem processados
 set *DB;	//Conjunto para adicionar as palavras (Arvore vermelho-preta)
+DIR *dpdf;
+struct dirent *epdf;
 
 int main(){
 	clear();
@@ -56,12 +60,14 @@ int main(){
 		cin >> o;
 		switch(o){
 			case 1:
-				//O usuário seleciona os arquivos para processamento
 				clear();
-				files2Process = selectFiles();
-				cout << "Do you want to proceed? (y/n): ";
+				//O programa faz detecção dos arquivos a serem processados na pasta de entrada				
+				selectFiles();
 				char a;	
-				cin >> a;
+				if(files2Process->size > 0){
+					cout << "Do you want to proceed? (y/n): ";
+					cin >> a;
+				}else a = 'n';
 				//Se o usuário escolhe continuar com os arquivos eles são processados senao a operação é cancelada
 				if(a == 'y'){
 					//Cria variáveis para contar o tempo de execução das ações
@@ -202,31 +208,41 @@ template <class T> void displayList(List<T> *l){
 	cout << endl;
 }
 
-List<string>* selectFiles(){
-	cout << "Inform the txt with the name of the files you want to process. (The files must be in the directory of the program)" << endl;
-	List<string> *files = new List<string>;
-	string file;
-	//Pede ao usuário o txt com o nome dos arquivos a serem processados
-	cout << "\nTXT with the names of the files: " << endl;
-	string txt;
-	cout << "> ";
-	cin >> txt;
-	ifstream names(txt.c_str(), ios::in);
-	//Encerra o programa caso o arquivo não possa ser aberto
-	if(!names){
-		cerr << "\033[1;31mFile could not be opened.\033[0m\n" << endl;
-		exit(1);
+bool validFile(string file){
+	cout << file << endl;
+	if(file.empty() || file.size() < 4)
+		return false;
+	string test = ".txt";
+	int j = 3;
+	for(int i = file.size()-1; i > file.size() - 5; i--, j--){
+		if(file[i] != test[j])
+			return false;
 	}
-	string name;
-	//Adiciona o nome dos arquivos em uma lista
-	while(names >> name){
-		files = add(files, name);
+	return true;
+}
+
+void selectFiles(){
+	cout << "The program will detect the files to be processed in the folder \"Input\", wish to continue? (y/n) " << endl;
+	cout << "> ";
+	char a;	
+	cin >> a;
+	if(a == 'n')
+		return;
+	//Abre o diretório com os arquivos para serem processados
+	dpdf = opendir("./Input");
+	if(dpdf != NULL){
+		//Faz leitura dos arquivos no diretório e os adiciona na lista para processamento
+		while(epdf = readdir(dpdf)){
+			string file = string(epdf->d_name);
+			if(validFile(file)){ 		
+				files2Process = add(files2Process, file);
+			}
+		}
 	}
 	//Mostra ao usuário os arquivos escolhidos para processamento
-	cout << "\n-Selected files:\n";
-	displayList(files);
-	cout << "\n" << files->size << " files found..." << endl;
-	return files; 	
+	cout << "\n-Files detected:\n";
+	displayList(files2Process);
+	cout << "\n" << files2Process->size << " files found...\n" << endl;	
 }
 
 set *processFiles(List<string> *files){
