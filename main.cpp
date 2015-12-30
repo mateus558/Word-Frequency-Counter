@@ -1,7 +1,9 @@
 #include <iostream>
 #include <string>
 #include <fstream>
+#include <ctime>
 #include <unistd.h>
+#include <algorithm>
 #include <ios>
 #include <cstdlib>
 #include "RBtree.h"
@@ -22,6 +24,9 @@ template <class T> List<T>* add(List<T> *l, T key);
 template <class T> void displayList(List<T> *l);
 RBtree<string> *processFiles(List<string> *files);
 List<string>* selectFiles();
+void removeSpecialChars(string *word);
+void merge(NODE<string> **&A, int p, int q, int r);
+void mergeSort(NODE<string> **&A, int p, int r);
 void process_mem_usage(double& vm_usage, double& resident_set);
 
 string def = " ";
@@ -30,6 +35,7 @@ int main(){
 	clear();
 	bool erro = false;
 	RBtree<string> *DB;
+	Container<string> *sortedNodes;
 	List<string> *files2Process= new List<string>;
 	showMenu(files2Process->getSize());
 	int o;	
@@ -51,14 +57,23 @@ int main(){
 				cin >> a;
 				//If the user continue with the files the DB is loaded else the operation is canceled
 				if(a == 'y'){
+					clock_t start, finish;
+					start = clock();
 					DB = processFiles(files2Process); 
+					sortedNodes = DB->getSortedList();					
+					mergeSort(sortedNodes->array, 0, sortedNodes->count); 	
+					finish = clock();
+					/*for(int i = 0; i < sortedNodes->count; i++){
+						cout << sortedNodes->array[i]->key << " - " << sortedNodes->array[i]->count << endl;
+					}*/	
+					double time = ((double)(finish - start))/CLOCKS_PER_SEC;
 					clear();
 					showMenu(files2Process->getSize());				
-					cout << "\033[1;34mDB loaded.\033[0m\n" << endl;
+					cout << "\033[1;34mDB loaded in " << time << "\033[1;34m seconds.\033[0m\n" << endl;					//DB->display();					
 					double vm = 0.0, re= 0.0;
 					process_mem_usage(vm, re);
-					cout << "VM: " << vm << "Kb | RSS: " << re << "Kb"<< endl;
 					cout << DB->getN() << " palavras unicas.\n" << endl;
+					cout << "VM: " << vm << "Kb | RSS: " << re << "Kb"<< endl;
 				}else{
 					files2Process = new List<string>;
 					clear();
@@ -70,7 +85,19 @@ int main(){
 				if(files2Process->getSize() == 0){
 					return 0;
 				}else{
-
+					clear();
+					cout << "Enter X: " << endl;
+					int X;
+					cin >> X;
+					cout << endl;
+					for(int i = sortedNodes->count-1; i > (sortedNodes->count-1 - X); i--){
+						cout << sortedNodes->array[i]->key << " - " << sortedNodes->array[i]->count << endl; 
+					}
+					cout << "\nPress anything and ENTER to go back to menu..." << endl; 
+					char a;					
+					cin >> a;
+					clear();
+					showMenu(files2Process->getSize());				
 				}
 				break;
 			case 3:
@@ -83,8 +110,17 @@ int main(){
 				}
 				break;
 			case 4:
-				if(files2Process->getSize() > 0){				
-					
+				if(files2Process->getSize() > 0){			
+					clear();	
+					for(int i = 0; i < sortedNodes->count; i++){
+						if(sortedNodes->array[i]->count == 1)
+							cout << sortedNodes->array[i]->key << " - " << sortedNodes->array[i]->count << endl; 
+					}
+					cout << "\nPress anything and ENTER to go back to menu..." << endl; 
+					char a;					
+					cin >> a;
+					clear();
+					showMenu(files2Process->getSize());
 				}else{
 					erro = true;
 					clear();
@@ -203,7 +239,9 @@ RBtree<string> *processFiles(List<string> *files){
 			//double vm = 0.0, re= 0.0;
 			//process_mem_usage(vm, re);
 			//cout << "VM: " << vm << "Kb | RSS: " << re << "Kb"<< endl;
-			temp->RB_insert(word);
+			removeSpecialChars(&word);
+			if(!word.empty())
+				temp->RB_insert(word);
 		}
 		inFile[i].close();
 		inFile[i].clear();
@@ -213,6 +251,36 @@ RBtree<string> *processFiles(List<string> *files){
 	return temp;
 }
 
+void removeSpecialChars(string *word){
+	word->resize(remove_if(word->begin(), word->end(),[](char x){return !isalnum(x) && !isspace(x);})-word->begin());
+}
+
+void merge(NODE<string> **&A, int p, int q, int r){
+	int i, j , k;
+	NODE<string>** w = new NODE<string>*[r-p];
+	for(int n = 0; n < (r-p); n++){
+		w[n] = NULL;
+	}	
+	i = p; j = q;
+	k = 0;
+	while(i < q && j < r){
+		if(A[i]->count <= A[j]->count) w[k++] = A[i++];
+		else w[k++] = A[j++];
+	}
+	while(i < q) w[k++] = A[i++];
+	while(j < r) w[k++] = A[j++];
+	for(i = p; i < r; ++i) A[i] = w[i - p];
+}
+
+void mergeSort(NODE<string> **&A, int p, int r){
+	if(p < r){
+	//	cout << "a" << endl;
+		int q = (p + r)/2;
+		mergeSort(A, p, q);
+		mergeSort(A, q + 1, r);
+		merge(A, p, q, r);
+	}
+}
 //////////////////////////////////////////////////////////////////////////////
 //
 // process_mem_usage(double &, double &) - takes two doubles by reference,

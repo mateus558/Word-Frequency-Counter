@@ -41,7 +41,9 @@ template <class T> NODE<T>* RBtree<T>::tree_insert(T key){
 		this->root = z;
 	}else if(key < y->key){
 		y->left = z;
-	}else y->right = z;
+	}else{
+		y->right = z;
+	}
 	return z;
 }
 
@@ -150,6 +152,20 @@ template <class T> void RBtree<T>::INORDER_TREE_WALK(NODE<T> *root){
 template <class T> void RBtree<T>::display(){
 	INORDER_TREE_WALK(this->root);
 	cout << endl;
+}
+
+template <class T> void RBtree<T>::TREE_SORT(NODE<T> *root, Container<T>* array, int i){
+	if(*root != *this->nill){
+		TREE_SORT(root->left, array, i);
+		array->push_back(root);		
+		TREE_SORT(root->right, array, i);
+	}
+}
+
+template <class T> Container<T>* RBtree<T>::getSortedList(){
+		Container<T>* nodes = new Container<T>(N);
+		TREE_SORT(this->root, nodes, 0);
+		return nodes;
 }
 
 template <class T> void RBtree<T>::aux_delete(NODE<T> *&root){
