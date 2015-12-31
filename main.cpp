@@ -24,7 +24,7 @@ typedef RBtree<string> set;
 
 void showMenu(int sizeList);
 void clear();
-set *processFiles();
+void processFiles();
 void selectFiles();
 void removeSpecialChars(string *word);
 void merge(NODE<string> **arr, int l, int m, int r);
@@ -43,6 +43,7 @@ int main(){
 	clear();
 	bool erro = false;	
 	files2Process = new List<string>("");
+	DB = new set(def);
 	showMenu(files2Process->size());
 	int o;	
 	while(1){
@@ -76,7 +77,7 @@ int main(){
 					clock_t start, finish;
 					start = clock();
 					//Coloca os dados processados no conjunto
-					DB = processFiles(); 
+					processFiles(); 
 					//Retorna uma lista com os nós ordenados lexicograficamente
 					sortedNodes = DB->getSortedList();
 					//Ordena os nos por frequencia mantendo a ordem em que aparecem					
@@ -230,9 +231,8 @@ void selectFiles(){
 	cout << "\n" << files2Process->size() << " files found...\n" << endl;	
 }
 
-set *processFiles(){
+void processFiles(){
 	List<string> *x = files2Process;	
-	set *temp = new set(def);
 	ifstream inFile[files2Process->size()];
 	int i = 0, tam = x->size();
 
@@ -253,14 +253,13 @@ set *processFiles(){
 			//Remove caracteres especiais das palavras
 			removeSpecialChars(&word);
 			if(!word.empty())
-				temp->RB_insert(word);
+				DB->RB_insert(word);
 		}
 		inFile[i].close();
 		inFile[i].clear();
 		x->pop();
 		i++;
  	}
-	return temp;
 }
 //Funcao para remocao de caracteres especiais
 void removeSpecialChars(string *word){
