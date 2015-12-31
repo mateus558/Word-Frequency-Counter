@@ -87,19 +87,19 @@ int main(){
 					}*/	
 					double time = ((double)(finish - start))/CLOCKS_PER_SEC;
 					clear();
-					showMenu(1);				
+					showMenu(DB->getN());				
 					//Dados sobre o carregamento do conjunto								
 					cout << "\033[1;34mDB loaded in " << time << "\033[1;34m seconds.\033[0m\n" << endl;					//DB->display();					
 					cout << DB->getN() << " palavras unicas.\n" << endl;
 				}else{
 					files2Process = new List<string>("");
 					clear();
-					showMenu(files2Process->size());
+					showMenu(DB->getN());
 					cerr << "\033[1;31mOperation canceled.\033[0m\n" << endl;
 				}
 				break;
 			case 2:
-				if(files2Process->size() == 0){
+				if(DB->getN() == 0){
 					return 0;
 				}else{
 					clear();
@@ -114,20 +114,20 @@ int main(){
 					char a;					
 					cin >> a;
 					clear();
-					showMenu(files2Process->size());				
+					showMenu(DB->getN());				
 				}
 				break;
 			case 3:
-				if(files2Process->size() > 0){				
+				if(DB->getN() > 0){				
 					
 				}else{
 					erro = true;
 					clear();
-					showMenu(files2Process->size());
+					showMenu(DB->getN());
 				}
 				break;
 			case 4:
-				if(files2Process->size() > 0){			
+				if(DB->getN() > 0){			
 					clear();	
 					int i  = 0;
 					while(sortedNodes->array[i]->count == 1){
@@ -137,27 +137,27 @@ int main(){
 					char a;					
 					cin >> a;
 					clear();
-					showMenu(files2Process->size());
+					showMenu(DB->getN());
 				}else{
 					erro = true;
 					clear();
-					showMenu(files2Process->size());
+					showMenu(DB->getN());
 				}
 				break;
 			case 5:
-				if(files2Process->size() > 0){				
+				if(DB->getN() > 0){				
 					//delete DB;					
 					return 0;
 				}else{
 					erro = true;
 					clear();
-					showMenu(files2Process->size());
+					showMenu(DB->getN());
 				}
 				break;
 			default: 
 				erro = true;
 				clear();
-				showMenu(files2Process->size());
+				showMenu(DB->getN());
 				break;
 		}
 	}
