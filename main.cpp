@@ -7,25 +7,24 @@
 #include <algorithm>
 #include <ios>
 #include <cstdlib>
+#include "List.h"
 #include "RBtree.h"
 
 using namespace std;
 
 typedef RBtree<string> set;
 
-template <class T> struct List{
+/*template <class T> struct List{
 	T item;
 	int size;
 	List<T> *next;
 	List(){ size = 0;}
 	int getSize(){ return this->size;}
-};
+};*/
 
 void showMenu(int sizeList);
 void clear();
-List<string>* add(List<string> *l, string key);
-void displayList(List<string> *l);
-set *processFiles(List<string> *files);
+set *processFiles();
 void selectFiles();
 void removeSpecialChars(string *word);
 void merge(NODE<string> **arr, int l, int m, int r);
@@ -43,8 +42,8 @@ struct dirent *epdf;
 int main(){
 	clear();
 	bool erro = false;	
-	files2Process = new List<string>;
-	showMenu(files2Process->getSize());
+	files2Process = new List<string>("");
+	showMenu(files2Process->size());
 	int o;	
 	while(1){
 		if(erro){
@@ -64,17 +63,20 @@ int main(){
 				//O programa faz detecção dos arquivos a serem processados na pasta de entrada				
 				selectFiles();
 				char a;	
-				if(files2Process->size > 0){
+				if(files2Process->size() > 0){
 					cout << "Do you want to proceed? (y/n): ";
 					cin >> a;
-				}else a = 'n';
+				}else{
+					delete files2Process;
+					a = 'n';
+				}
 				//Se o usuário escolhe continuar com os arquivos eles são processados senao a operação é cancelada
 				if(a == 'y'){
 					//Cria variáveis para contar o tempo de execução das ações
 					clock_t start, finish;
 					start = clock();
 					//Coloca os dados processados no conjunto
-					DB = processFiles(files2Process); 
+					DB = processFiles(); 
 					//Retorna uma lista com os nós ordenados lexicograficamente
 					sortedNodes = DB->getSortedList();
 					//Ordena os nos por frequencia mantendo a ordem em que aparecem					
@@ -85,19 +87,19 @@ int main(){
 					}*/	
 					double time = ((double)(finish - start))/CLOCKS_PER_SEC;
 					clear();
-					showMenu(files2Process->getSize());				
+					showMenu(1);				
 					//Dados sobre o carregamento do conjunto								
 					cout << "\033[1;34mDB loaded in " << time << "\033[1;34m seconds.\033[0m\n" << endl;					//DB->display();					
 					cout << DB->getN() << " palavras unicas.\n" << endl;
 				}else{
-					files2Process = new List<string>;
+					files2Process = new List<string>("");
 					clear();
-					showMenu(files2Process->getSize());
+					showMenu(files2Process->size());
 					cerr << "\033[1;31mOperation canceled.\033[0m\n" << endl;
 				}
 				break;
 			case 2:
-				if(files2Process->getSize() == 0){
+				if(files2Process->size() == 0){
 					return 0;
 				}else{
 					clear();
@@ -112,20 +114,20 @@ int main(){
 					char a;					
 					cin >> a;
 					clear();
-					showMenu(files2Process->getSize());				
+					showMenu(files2Process->size());				
 				}
 				break;
 			case 3:
-				if(files2Process->getSize() > 0){				
+				if(files2Process->size() > 0){				
 					
 				}else{
 					erro = true;
 					clear();
-					showMenu(files2Process->getSize());
+					showMenu(files2Process->size());
 				}
 				break;
 			case 4:
-				if(files2Process->getSize() > 0){			
+				if(files2Process->size() > 0){			
 					clear();	
 					int i  = 0;
 					while(sortedNodes->array[i]->count == 1){
@@ -135,27 +137,27 @@ int main(){
 					char a;					
 					cin >> a;
 					clear();
-					showMenu(files2Process->getSize());
+					showMenu(files2Process->size());
 				}else{
 					erro = true;
 					clear();
-					showMenu(files2Process->getSize());
+					showMenu(files2Process->size());
 				}
 				break;
 			case 5:
-				if(files2Process->getSize() > 0){				
+				if(files2Process->size() > 0){				
 					//delete DB;					
 					return 0;
 				}else{
 					erro = true;
 					clear();
-					showMenu(files2Process->getSize());
+					showMenu(files2Process->size());
 				}
 				break;
 			default: 
 				erro = true;
 				clear();
-				showMenu(files2Process->getSize());
+				showMenu(files2Process->size());
 				break;
 		}
 	}
@@ -190,24 +192,6 @@ void showMenu(int sizeList){
 void clear(){
 	for(int i = 0; i < 40; i++) cout << endl;
 }
-//Adiciona items em lista encadeada
-List<string>* add(List<string> *l, string key){
-	List<string> *e = new List<string>;
-	if(!key.empty()){	
-		e->item = key;
-		e->next = l;
-		e->size = l->size+1;
-	}else return l;
-	return e;
-}
-//Mostra o conteúdo de uma lista encadeada
-void displayList(List<string> *l){
-	List<string> *x = l;
-	while(x != NULL){
-		cout << x->item << endl;		
-		x = x->next;
-	} 
-}
 
 bool validFile(string file){
 	if(file.empty() || file.size() < 4)
@@ -228,11 +212,6 @@ void selectFiles(){
 	cin >> a;
 	if(a == 'n')
 		return;
-	while (files2Process != NULL){
-    		delete files2Process;
-    		files2Process = files2Process->next;
-	}
-	files2Process = new List<string>;
 	//Abre o diretório com os arquivos para serem processados
 	dpdf = opendir("./Input");
 	if(dpdf != NULL){
@@ -240,29 +219,29 @@ void selectFiles(){
 		while(epdf = readdir(dpdf)){
 			string file = string(epdf->d_name);
 			if(validFile(file)){ 		
-				files2Process = add(files2Process, file);
+				files2Process->push_front(file);
 			}
 		}
 	}
 	closedir(dpdf);
 	//Mostra ao usuário os arquivos escolhidos para processamento
 	cout << "\n-Files detected:\n";
-	displayList(files2Process);
-	cout << "\n" << files2Process->size << " files found...\n" << endl;	
+	files2Process->display();
+	cout << "\n" << files2Process->size() << " files found...\n" << endl;	
 }
 
-set *processFiles(List<string> *files){
-	List<string> *x = files;	
+set *processFiles(){
+	List<string> *x = files2Process;	
 	set *temp = new set(def);
-	ifstream inFile[files->size];
-	int i = 0, tam = x->size;
+	ifstream inFile[files2Process->size()];
+	int i = 0, tam = x->size();
 
 	//Abre arquivos contidos na lista
-	while(x != NULL){
+	while(x->front() != ""){
 		if(i == tam) break;
-		inFile[i].open(string("Input/") + (x->item).c_str(), ios::in);				
+		inFile[i].open(string("Input/") + (x->front()).c_str(), ios::in);				
 
-		cout << "Processing " << (x->item).c_str() << "..." << endl;
+		cout << "Processing " << (x->front()).c_str() << "..." << endl;
 		if(!inFile[i]){
 			cerr << "\033[1;31mFile could not be opened.\033[0m\n" << endl;
 			exit(1);
@@ -278,7 +257,7 @@ set *processFiles(List<string> *files){
 		}
 		inFile[i].close();
 		inFile[i].clear();
-		x = x->next;
+		x->pop();
 		i++;
  	}
 	return temp;
