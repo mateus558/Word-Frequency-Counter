@@ -18,13 +18,13 @@ template <class T> struct List{
 	int size;
 	List<T> *next;
 	List(){ size = 0;}
-	int getSize(){ return this->size;}	
+	int getSize(){ return this->size;}
 };
 
 void showMenu(int sizeList);
 void clear();
-template <class T> List<T>* add(List<T> *l, T key);
-template <class T> void displayList(List<T> *l);
+List<string>* add(List<string> *l, string key);
+void displayList(List<string> *l);
 set *processFiles(List<string> *files);
 void selectFiles();
 void removeSpecialChars(string *word);
@@ -191,21 +191,22 @@ void clear(){
 	for(int i = 0; i < 40; i++) cout << endl;
 }
 //Adiciona items em lista encadeada
-template <class T> List<T>* add(List<T> *l, T key){
-	List<T> *e = new List<T>;
-	e->item = key;
-	e->next = l;
-	e->size = l->size+1;
+List<string>* add(List<string> *l, string key){
+	List<string> *e = new List<string>;
+	if(!key.empty()){	
+		e->item = key;
+		e->next = l;
+		e->size = l->size+1;
+	}else return l;
 	return e;
 }
 //Mostra o conteúdo de uma lista encadeada
-template <class T> void displayList(List<T> *l){
+void displayList(List<string> *l){
 	List<string> *x = l;
 	while(x != NULL){
-		cout << x->item << endl;
+		cout << x->item << endl;		
 		x = x->next;
 	} 
-	cout << endl;
 }
 
 bool validFile(string file){
@@ -227,6 +228,10 @@ void selectFiles(){
 	cin >> a;
 	if(a == 'n')
 		return;
+	while (files2Process != NULL){
+    		delete files2Process;
+    		files2Process = files2Process->next;
+	}
 	files2Process = new List<string>;
 	//Abre o diretório com os arquivos para serem processados
 	dpdf = opendir("./Input");
@@ -239,6 +244,7 @@ void selectFiles(){
 			}
 		}
 	}
+	closedir(dpdf);
 	//Mostra ao usuário os arquivos escolhidos para processamento
 	cout << "\n-Files detected:\n";
 	displayList(files2Process);
