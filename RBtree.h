@@ -1,6 +1,9 @@
 #ifndef RBTREE_H_
 #define RBTREE_H_
 #include <iostream>
+#include <memory>
+
+using namespace std;
 template <typename T> struct NODE{
 	T key;
 	NODE *right;
@@ -13,7 +16,10 @@ template <typename T> struct NODE{
 	NODE(){
 		count = 1;
 	}
-
+	~NODE(){
+		delete right;
+		delete left;
+	}
 	/*      ----------
 		Operadores 
 		----------     		*/
@@ -53,8 +59,7 @@ private:
 	NODE<T>* tree_insert(T key);	
 	void leftRotate(NODE<T> *&x);
 	void rightRotate(NODE<T> *&y);
-	void aux_delete(NODE<T> *&root);
-	void TREE_SORT(NODE<T> *root, Container<T> *array, int i);
+	void TREE_SORT(NODE<T> *root, Container<T> *array) const;
 
 public:
 	RBtree(T def_val);

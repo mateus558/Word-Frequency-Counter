@@ -20,7 +20,6 @@ template <class T> RBtree<T>::RBtree(T def_val){
 template <class T> NODE<T>* RBtree<T>::tree_insert(T key){
 	NODE<T> *y = this->nill;
 	NODE<T> *x = this->root;
-	N++;
 	while(*x != *nill){
 		y = x;
 		if(key < x->key){
@@ -32,6 +31,7 @@ template <class T> NODE<T>* RBtree<T>::tree_insert(T key){
 			x = x->right;			
 		}
 	}
+	N++;
 	NODE<T> *z = new NODE<T>;
 	z->key = key;
 	z->p = y;
@@ -154,30 +154,22 @@ template <class T> void RBtree<T>::display(){
 	cout << endl;
 }
 
-template <class T> void RBtree<T>::TREE_SORT(NODE<T> *root, Container<T>* array, int i){
+template <class T> void RBtree<T>::TREE_SORT(NODE<T> *root, Container<T>* array) const{
 	if(*root != *this->nill){
-		TREE_SORT(root->left, array, i);
+		TREE_SORT(root->left, array);
 		array->push_back(root);		
-		TREE_SORT(root->right, array, i);
+		TREE_SORT(root->right, array);
 	}
 }
 
 template <class T> Container<T>* RBtree<T>::getSortedList(){
 		Container<T>* nodes = new Container<T>(N);
-		TREE_SORT(this->root, nodes, 0);
+		TREE_SORT(this->root, nodes);
 		return nodes;
 }
 
-template <class T> void RBtree<T>::aux_delete(NODE<T> *&root){
-	if(root != NULL){		
-		aux_delete(root->right);
-		aux_delete(root->left);
-		delete root;
-	}
-}
-
 template <class T> RBtree<T>::~RBtree(){ 
-	aux_delete(this->root);	
+	delete root;
 }
 
 template class RBtree<int>;

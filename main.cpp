@@ -12,16 +12,11 @@
 
 using namespace std;
 
-typedef RBtree<string> set;
-
-/*template <class T> struct List{
-	T item;
-	int size;
-	List<T> *next;
-	List(){ size = 0;}
-	int getSize(){ return this->size;}
-};*/
-
+void opcao1();
+void opcao2();
+void opcao3();
+void opcao4();
+void opcao5();
 void showMenu(int sizeList);
 void clear();
 void processFiles();
@@ -35,15 +30,18 @@ void process_mem_usage(double& vm_usage, double& resident_set);
 string def = " ";
 Container<string> *sortedNodes;	//Container para receber os nos ordenados
 List<string> *files2Process;	//Lista para os arquivos a serem processados
-set *DB;	//Conjunto para adicionar as palavras (Arvore vermelho-preta)
+RBtree<string> *DB;	//Conjunto para adicionar as palavras (Arvore vermelho-preta)
+RBtree<string> *file;	
+Container<string> *sortedNodesFile;	//Container para receber os nos ordenados
 DIR *dpdf;
+bool erro;
 struct dirent *epdf;
 
 int main(){
 	clear();
-	bool erro = false;	
+	erro = false;	
 	files2Process = new List<string>("");
-	DB = new set(def);
+	DB = new RBtree<string>(def);
 	showMenu(files2Process->size());
 	int o;	
 	while(1){
@@ -60,100 +58,19 @@ int main(){
 		cin >> o;
 		switch(o){
 			case 1:
-				clear();
-				//O programa faz detecção dos arquivos a serem processados na pasta de entrada				
-				selectFiles();
-				char a;	
-				if(files2Process->size() > 0){
-					cout << "Do you want to proceed? (y/n): ";
-					cin >> a;
-				}else{
-					delete files2Process;
-					a = 'n';
-				}
-				//Se o usuário escolhe continuar com os arquivos eles são processados senao a operação é cancelada
-				if(a == 'y'){
-					//Cria variáveis para contar o tempo de execução das ações
-					clock_t start, finish;
-					start = clock();
-					//Coloca os dados processados no conjunto
-					processFiles(); 
-					//Retorna uma lista com os nós ordenados lexicograficamente
-					sortedNodes = DB->getSortedList();
-					//Ordena os nos por frequencia mantendo a ordem em que aparecem					
-					mergeSort(sortedNodes->array, 0, sortedNodes->count-1);
-					finish = clock();
-					/*for(int i = 0; i < sortedNodes->count; i++){
-						cout << sortedNodes->array[i]->key << " - " << sortedNodes->array[i]->count << endl;
-					}*/	
-					double time = ((double)(finish - start))/CLOCKS_PER_SEC;
-					clear();
-					showMenu(DB->getN());				
-					//Dados sobre o carregamento do conjunto								
-					cout << "\033[1;34mDB loaded in " << time << "\033[1;34m seconds.\033[0m\n" << endl;					//DB->display();					
-					cout << DB->getN() << " palavras unicas.\n" << endl;
-				}else{
-					files2Process = new List<string>("");
-					clear();
-					showMenu(DB->getN());
-					cerr << "\033[1;31mOperation canceled.\033[0m\n" << endl;
-				}
+				opcao1();
 				break;
 			case 2:
-				if(DB->getN() == 0){
-					return 0;
-				}else{
-					clear();
-					cout << "Enter X: " << endl;
-					int X;
-					cin >> X;
-					cout << endl;
-					for(int i = sortedNodes->count-1; i > (sortedNodes->count-1 - X); i--){
-						cout << sortedNodes->array[i]->key << " - " << sortedNodes->array[i]->count << endl; 
-					}
-					cout << "\nPress anything and ENTER to go back to menu..." << endl; 
-					char a;					
-					cin >> a;
-					clear();
-					showMenu(DB->getN());				
-				}
+				opcao2();
 				break;
 			case 3:
-				if(DB->getN() > 0){				
-					
-				}else{
-					erro = true;
-					clear();
-					showMenu(DB->getN());
-				}
+				opcao3();
 				break;
 			case 4:
-				if(DB->getN() > 0){			
-					clear();	
-					int i  = 0;
-					while(sortedNodes->array[i]->count == 1){
-						cout << sortedNodes->array[i]->key << " - " << sortedNodes->array[i]->count << endl; 					i++;
-					}
-					cout << "\nPress anything and ENTER to go back to menu..." << endl; 
-					char a;					
-					cin >> a;
-					clear();
-					showMenu(DB->getN());
-				}else{
-					erro = true;
-					clear();
-					showMenu(DB->getN());
-				}
+				opcao4();
 				break;
 			case 5:
-				if(DB->getN() > 0){				
-					//delete DB;					
-					return 0;
-				}else{
-					erro = true;
-					clear();
-					showMenu(DB->getN());
-				}
+				opcao5();
 				break;
 			default: 
 				erro = true;
@@ -163,6 +80,140 @@ int main(){
 		}
 	}
 }
+
+void opcao1(){
+	clear();
+	//O programa faz detecção dos arquivos a serem processados na pasta de entrada				
+	selectFiles();
+	char a;	
+	if(files2Process->size() > 0){
+		cout << "Do you want to proceed? (y/n): ";
+		cin >> a;
+	}else{
+		delete files2Process;
+		a = 'n';
+	}
+	//Se o usuário escolhe continuar com os arquivos eles são processados senao a operação é cancelada
+	if(a == 'y'){
+		//Cria variáveis para contar o tempo de execução das ações
+		clock_t start, finish;
+		start = clock();
+		//Coloca os dados processados no conjunto
+		processFiles(); 
+		//Retorna uma lista com os nós ordenados lexicograficamente
+		sortedNodes = DB->getSortedList();
+		//Ordena os nos por frequencia mantendo a ordem em que aparecem					
+		mergeSort(sortedNodes->array, 0, sortedNodes->count-1);
+		finish = clock();	
+		double time = ((double)(finish - start))/CLOCKS_PER_SEC;
+		clear();
+		showMenu(DB->getN());				
+		//Dados sobre o carregamento do conjunto								
+		cout << "\033[1;34mDB loaded in " << time << "\033[1;34m seconds.\033[0m\n" << endl;		
+		//DB->display();					
+		cout << DB->getN() << " palavras unicas.\n" << endl;
+	}else{
+		files2Process = new List<string>("");
+		clear();
+		showMenu(DB->getN());
+		cerr << "\033[1;31mOperation canceled.\033[0m\n" << endl;
+	}
+}
+
+void opcao2(){
+	if(DB->getN() == 0){
+		exit(0);
+	}else{
+		clear();
+		cout << "Enter X: " << endl;
+		int X;
+		cin >> X;
+		cout << endl;
+		for(int i = sortedNodes->count-1; i > (sortedNodes->count-1 - X); i--){
+			cout << sortedNodes->array[i]->key << " - " << sortedNodes->array[i]->count << " occurrences" << endl; 
+		}
+		cout << "\nPress anything and ENTER to go back to menu..." << endl; 
+		char a;					
+		cin >> a;
+		clear();
+		showMenu(DB->getN());				
+	}
+}
+
+void opcao3(){
+	if(DB->getN() > 0){				
+		clear();
+		string selFile;
+		ifstream inFile;		
+		file = new RBtree<string>("");		
+
+		cout << "Type the name of the file:" << endl;
+		cout << "> ";
+		cin >> selFile;
+		inFile.open(string("Input/") + selFile.c_str(), ios::in);
+		if(!inFile){
+			cerr << "\033[1;31mFile could not be opened.\033[0m\n" << endl;
+			exit(1);
+		} 
+		string word;
+		while(inFile >> word){
+			removeSpecialChars(&word);
+			if(!word.empty()){
+				file->RB_insert(word);
+			}				
+		}
+		inFile.close();
+		sortedNodesFile = file->getSortedList();
+		//Ordena os nos por frequencia mantendo a ordem em que aparecem					
+		mergeSort(sortedNodesFile->array, 0, sortedNodesFile->count-1);
+		cout << "\nEnter X: " << endl;
+		int X;
+		cin >> X;
+		cout << endl;
+		for(int i = sortedNodesFile->count-1; i > (sortedNodesFile->count-1 - X); i--){
+			cout << sortedNodesFile->array[i]->key << " - " << sortedNodesFile->array[i]->count << " occurrences" << endl; 
+		}
+		cout << "\nPress anything and ENTER to go back to menu..." << endl; 
+		char a;					
+		cin >> a;
+		clear();
+		showMenu(DB->getN());
+	}else{
+		erro = true;
+		clear();
+		showMenu(DB->getN());
+	}
+}
+
+void opcao4(){
+	if(DB->getN() > 0){			
+		clear();	
+		int i  = 0;
+		while(sortedNodes->array[i]->count == 1){
+			cout << sortedNodes->array[i]->key << " - " << sortedNodes->array[i]->count << " occurrences"<< endl; 				i++;
+		}
+		cout << "\nPress anything and ENTER to go back to menu..." << endl; 
+		char a;					
+		cin >> a;
+		clear();
+		showMenu(DB->getN());
+	}else{
+		erro = true;
+		clear();
+		showMenu(DB->getN());
+	}
+}
+
+void opcao5(){
+	if(DB->getN() > 0){				
+		exit(2);
+	}else{
+		erro = true;
+		clear();
+		showMenu(DB->getN());
+	}
+}
+
 //Mostra o menu principal
 void showMenu(int sizeList){
 	cout << "\t\033[42;30m-----------------------------------------------------------------------\033[0m"<< endl;
@@ -234,6 +285,7 @@ void selectFiles(){
 void processFiles(){
 	List<string> *x = files2Process;	
 	ifstream inFile[files2Process->size()];
+	DB = new RBtree<string>(def);
 	int i = 0, tam = x->size();
 
 	//Abre arquivos contidos na lista
@@ -261,9 +313,14 @@ void processFiles(){
 		i++;
  	}
 }
+
 //Funcao para remocao de caracteres especiais
 void removeSpecialChars(string *word){
 	word->resize(remove_if(word->begin(), word->end(),[](char x){return !isalnum(x) && !isspace(x);})-word->begin());
+	/*for(int i = 0; i < word.size(); i++){
+		if((int)word[i] < 97 && (int)word[i] > 122 || (int)word[i] < 65 && (int)word[i] > 90)
+			word.erase(word.begin() + i); 
+	}*/
 }
 
 void merge(NODE<string> **arr, int l, int m, int r){
@@ -271,14 +328,14 @@ void merge(NODE<string> **arr, int l, int m, int r){
     int n1 = m - l + 1;
     int n2 =  r - m;
  
-    /* create temp arrays */
+    /* Cria arrays temporários */
     NODE<string> *L[n1], *R[n2];
  
-    /* Copy data to temp arrays L[] and R[] */
+    /* Copia dados para arrays temporários L e R */
     for(i = 0; i < n1; i++) L[i] = arr[l + i];
     for(j = 0; j < n2; j++) R[j] = arr[m + 1+ j];
  
-    /* Merge the temp arrays back into arr[l..r]*/
+    /* Intercala os arrays temporários em arr[l..r]*/
     i = 0; j = 0; k = l;
     while (i < n1 && j < n2){
         if (L[i]->count <= R[j]->count){
@@ -292,29 +349,29 @@ void merge(NODE<string> **arr, int l, int m, int r){
         k++;
     }
  
-    /* Copy the remaining elements of L[], if there are any */
+    /* Copia os elementos restantes em L[], se existe algum */
     while (i < n1){
         arr[k] = L[i];
         i++; k++;
     }
  
-    /* Copy the remaining elements of R[], if there are any */
+    /* Copia os elementos restantes em R[], se existe algum */
     while (j < n2){
         arr[k] = R[j];
         j++; k++;
     }
 }
  
-/* l is for left index and r is right index of the sub-array
-  of arr to be sorted */
+/* l é para o indice da esquerda e r é o indice da direita do sub-array para ser ordenado */
 void mergeSort(NODE<string> **arr, int l, int r){
     if (l < r){
-        int m = l+(r-l)/2; //Same as (l+r)/2, but avoids overflow for large l and h
+        int m = l+(r-l)/2; //O mesmo que (l+r)/2, mas evita overflow para valores grandes de l e h
         mergeSort(arr, l, m);
         mergeSort(arr, m+1, r);
         merge(arr, l, m, r);
     }
 }
+
 //////////////////////////////////////////////////////////////////////////////
 //
 // process_mem_usage(double &, double &) - takes two doubles by reference,
