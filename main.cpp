@@ -22,17 +22,17 @@ void clear();
 void processFiles();
 void selectFiles();
 void removeSpecialChars(string *word);
-void merge(NODE<string> **arr, int l, int m, int r);
-void mergeSort(NODE<string> **arr, int l, int r);
+void merge(NODE **arr, int l, int m, int r);
+void mergeSort(NODE **arr, int l, int r);
 bool validFile(string file);
 void process_mem_usage(double& vm_usage, double& resident_set);
 
 string def = " ";
-Container<string> *sortedNodes;	//Container para receber os nos ordenados
+Container *sortedNodes;	//Container para receber os nos ordenados
 List<string> *files2Process;	//Lista para os arquivos a serem processados
-RBtree<string> *DB;	//Conjunto para adicionar as palavras (Arvore vermelho-preta)
-RBtree<string> *file;	
-Container<string> *sortedNodesFile;	//Container para receber os nos ordenados
+RBtree *DB;	//Conjunto para adicionar as palavras (Arvore vermelho-preta)
+RBtree *file;	
+Container *sortedNodesFile;	//Container para receber os nos ordenados
 DIR *dpdf;
 bool erro;
 struct dirent *epdf;
@@ -41,7 +41,7 @@ int main(){
 	clear();
 	erro = false;	
 	files2Process = new List<string>("");
-	DB = new RBtree<string>(def);
+	DB = new RBtree;
 	showMenu(files2Process->size());
 	int o;	
 	while(1){
@@ -111,7 +111,7 @@ void opcao1(){
 		//Dados sobre o carregamento do conjunto								
 		cout << "\033[1;34mDB loaded in " << time << "\033[1;34m seconds.\033[0m\n" << endl;		
 		//DB->display();					
-		cout << DB->getN() << " palavras unicas.\n" << endl;
+		cout << DB->getN() << " palavras unicas e total de " << DB->getTotal() << " palavras.\n" << endl;
 	}else{
 		files2Process = new List<string>("");
 		clear();
@@ -145,7 +145,7 @@ void opcao3(){
 		clear();
 		string selFile;
 		ifstream inFile;		
-		file = new RBtree<string>("");		
+		file = new RBtree;		
 
 		cout << "Type the name of the file:" << endl;
 		cout << "> ";
@@ -205,7 +205,8 @@ void opcao4(){
 }
 
 void opcao5(){
-	if(DB->getN() > 0){				
+	if(DB->getN() > 0){
+		delete DB;				
 		exit(2);
 	}else{
 		erro = true;
@@ -285,7 +286,7 @@ void selectFiles(){
 void processFiles(){
 	List<string> *x = files2Process;	
 	ifstream inFile[files2Process->size()];
-	DB = new RBtree<string>(def);
+	DB = new RBtree;
 	int i = 0, tam = x->size();
 
 	//Abre arquivos contidos na lista
@@ -323,13 +324,13 @@ void removeSpecialChars(string *word){
 	}*/
 }
 
-void merge(NODE<string> **arr, int l, int m, int r){
+void merge(NODE **arr, int l, int m, int r){
     int i, j, k;
     int n1 = m - l + 1;
     int n2 =  r - m;
  
     /* Cria arrays temporários */
-    NODE<string> *L[n1], *R[n2];
+    NODE *L[n1], *R[n2];
  
     /* Copia dados para arrays temporários L e R */
     for(i = 0; i < n1; i++) L[i] = arr[l + i];
@@ -363,7 +364,7 @@ void merge(NODE<string> **arr, int l, int m, int r){
 }
  
 /* l é para o indice da esquerda e r é o indice da direita do sub-array para ser ordenado */
-void mergeSort(NODE<string> **arr, int l, int r){
+void mergeSort(NODE **arr, int l, int r){
     if (l < r){
         int m = l+(r-l)/2; //O mesmo que (l+r)/2, mas evita overflow para valores grandes de l e h
         mergeSort(arr, l, m);

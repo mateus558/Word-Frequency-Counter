@@ -3,41 +3,35 @@
 
 using namespace std; 
 
-template <class T> bool operator <(const T& key, const T& key1){return key < key1;}
-
-template <class T> RBtree<T>::RBtree(T def_val){
-	this->nill = new NODE<T>;
-	nill->right = nill->left = nill->p = nill;
-	nill->ehVermelho = false;
-	nill->key = def_val;
-	this->root = new NODE<T>;
-	root->right = root->left = root->p = nill;
-	root->ehVermelho = false;
-	root->key = def_val;
+ RBtree::RBtree(){
+	this->Nil = new NODE;
+	this->root = Nil;
 	N = 0;
+	T = 0;
 }
 
-template <class T> NODE<T>* RBtree<T>::tree_insert(T key){
-	NODE<T> *y = this->nill;
-	NODE<T> *x = this->root;
-	while(*x != *nill){
+ NODE* RBtree::tree_insert(string key){
+	NODE *y = this->Nil;
+	NODE *x = this->root;
+	while(x != Nil){
 		y = x;
 		if(key < x->key){
 			x = x->left;
-		}else if(key == x->key){
-			x->count++;
-			return NULL;
-		}else{
+		}else if(key > x->key){
 			x = x->right;			
+		}else{
+			x->count++;
+			T++;
+			return NULL;
 		}
 	}
 	N++;
-	NODE<T> *z = new NODE<T>;
-	z->key = key;
+	T++;
+	NODE *z = new NODE(key);
 	z->p = y;
-	z->right = this->nill;
-	z->left = this->nill;
-	if(*y == *nill){
+	z->right = z->left = this->Nil;
+	z->ehVermelho = true;
+	if(y == Nil){
 		this->root = z;
 	}else if(key < y->key){
 		y->left = z;
@@ -47,91 +41,96 @@ template <class T> NODE<T>* RBtree<T>::tree_insert(T key){
 	return z;
 }
 
-template <class T> void RBtree<T>::leftRotate(NODE<T> *&x){
-	NODE<T> *y = x->right;
-	x->right = y->left;
-	if(*y->left != *this->nill){
-		y->left->p = y;
-	}
-	y->p = x->p;
-	if(*y->p == *this->nill){
-		this->root = x;
-	}else if(*y == *y->p->right){
-		y->p->right = x;
-	}else y->p->left = x;
-	x->right = y;
-	y->p = x;
+ void RBtree::leftRotate(NODE *x){
+	NODE *y;
+    	y = x->right;
+    	x->right = y->left;
+    	y->left->p = x;
+    	y->p = x->p;
+   
+    	if ( x->p == Nil )
+        	root = y;
+    	else if ( x == x->p->left )
+        	x->p->left = y;
+    	else
+       		x->p->right = y;
+    	y->left = x;
+    	x->p = y;
 }
 
-template <class T> void RBtree<T>::rightRotate(NODE<T> *&y){
-	NODE<T> *x = y->left;
-	y->left = x->right;
-	if(*x->right != *nill){
-		x->right->p = x;
-	}
-	x->p = y->p;
-	if(*x->p == *nill){
-		this->root = y;
-	}else if(*x == *x->p->left){
-		x->p->left = y;
-	}else x->p->right = y;
-	y->left = x;
-	x->p = y;
+ void RBtree::rightRotate(NODE *x){
+	NODE *y;
+   
+    	y = x->left;
+    	x->left = y->right;
+    	y->right->p = x;
+    	y->p = x->p;
+   
+    	if ( x->p == Nil )
+        	root = y;
+    	else if ( x == x->p->right )
+        	x->p->right = y;
+    	else
+        	x->p->left = y;
+    	y->right = x;
+    	x->p = y;
 }
 
-template <class T> void RBtree<T>::RB_insertFixUp(NODE<T> *&z){
-	while(z->p->ehVermelho && (*z != *this->root)){
-		if(*z->p == *z->p->p->left){
-			//Pai de z eh no leftuerdo, entao o tio eh righteito			
-			NODE<T> *tio = z->p->p->right;
-			if(tio->ehVermelho){
-			//Caso 1 - Tio eh vermelho, entao troca cores				
-				z->p->ehVermelho = false;
-				tio->ehVermelho = false;
+ void RBtree::RB_insertFixUp(NODE *z){
+	NODE *y;
+   
+    	while (z->p->ehVermelho && (z->p != this->root)){
+        	if (z->p == z->p->p->left){	
+            		y = z->p->p->right;
+           
+		    	if (y->ehVermelho){
+				z->p->ehVermelho = true;
+				y->ehVermelho = true;
 				z->p->p->ehVermelho = true;
 				z = z->p->p;
-			}else if(*z == *z->p->right){
-				//Caso 2 - Tio eh preto, entao faz rotacao 
-				z = z->p;
-				leftRotate(z);
-			}
-			//Caso 3
-			z->p->ehVermelho = false;
-			z->p->p->ehVermelho = true;
-			rightRotate(z->p->p);
-		}else{
-			//Simetrico ao if, trocando left por right
-			NODE<T> *tio = z->p->p->left;
-			if(tio->ehVermelho){
-				z->p->ehVermelho = false;
-				tio->ehVermelho = false;
+		    	}else{
+		        	if (z == z->p->right){
+		            		z = z->p;
+		            		leftRotate(z);
+		        	}
+		       		z->p->ehVermelho = true;
+		        	z->p->p->ehVermelho = true;
+		        	rightRotate( z->p->p );
+		    	}
+        	}else{
+            		y = z->p->p->left;
+           
+            		if ( y->ehVermelho){
+				z->p->ehVermelho = true;
+				y->ehVermelho = true;
 				z->p->p->ehVermelho = true;
 				z = z->p->p;
-			}else if(*z == *z->p->left){
-				z = z->p;
-				rightRotate(z);
-			}
-			z->p->ehVermelho = false;
-			z->p->p->ehVermelho = true;
-			leftRotate(z->p->p);
-		}
-	}
-	this->root->ehVermelho = false;
+            		}else{
+				if (z == z->p->left){
+				    z = z->p;
+				    rightRotate(z);
+				}
+				z->p->ehVermelho = true;
+				z->p->p->ehVermelho = true;
+				leftRotate(z->p->p);
+            		}
+        	}
+    	}	
+    	root->ehVermelho = true;
+    	y = NULL;
 }
 
-template <class T> void RBtree<T>::RB_insert(T key){
-	NODE<T> *z = tree_insert(key);
+ void RBtree::RB_insert(string key){
+	NODE *z = tree_insert(key);
 	if(z == NULL){ 
 		return;
 	}	
-	//cout << z->key << " " << z->p->key << endl;
-	z->ehVermelho = true;	
-	//RB_insertFixUp(z);
+	RB_insertFixUp(z);
 }
 
-template <class T> bool RBtree<T>::search(T val){
-	NODE<T> *x = this->root;
-	while(*x != *this->nill){
+ bool RBtree::search(string val){
+	NODE *x = this->root;
+	while(x != this->Nil){
 		if(val < x->key){
 			x = x->right;
 		}else if(val > x->key){
@@ -141,38 +140,76 @@ template <class T> bool RBtree<T>::search(T val){
 	return false;
 }
 
-template <class T> void RBtree<T>::INORDER_TREE_WALK(NODE<T> *root){
-	if(*root != *this->nill){
+ void RBtree::INORDER_TREE_WALK(NODE *root){
+	if(root != this->Nil){
 		INORDER_TREE_WALK(root->left);
 		cout << root->key << "-" << root->count+1 << " ";
 		INORDER_TREE_WALK(root->right);
 	}
 }	
 
-template <class T> void RBtree<T>::display(){
+ void RBtree::display(){
 	INORDER_TREE_WALK(this->root);
 	cout << endl;
 }
 
-template <class T> void RBtree<T>::TREE_SORT(NODE<T> *root, Container<T>* array) const{
-	if(*root != *this->nill){
+ void RBtree::TREE_SORT(NODE *root, Container* array) const{
+	if(root != this->Nil){
 		TREE_SORT(root->left, array);
 		array->push_back(root);		
 		TREE_SORT(root->right, array);
 	}
 }
 
-template <class T> Container<T>* RBtree<T>::getSortedList(){
-		Container<T>* nodes = new Container<T>(N);
+void RBtree::postOrderDelete(NODE *n){
+	if (n != this->Nil){   
+        	postOrderDelete(n->left);       
+        	postOrderDelete(n->right);
+		delete n;
+	}
+}
+
+ Container* RBtree::getSortedList(){
+		Container* nodes = new Container(N);
 		TREE_SORT(this->root, nodes);
 		return nodes;
 }
 
-template <class T> RBtree<T>::~RBtree(){ 
-	delete root;
+/*void RBtree::verify_properties(){
+	verify_property1(this->root);
+	verify_property2(this->root);
+	verify_property4(this->root);
+	verify_property5(this->root);
 }
 
-template class RBtree<int>;
-template class RBtree<string>;
-template class RBtree<float>;
-template class RBtree<double>;
+void RBtree::verify_property1(NODE *root){
+	if(root == NULL) return;	
+	assert(root->ehVermelho || !root->ehVermelho);
+	verify_property1(root->left);
+	verify_property1(root->right);	
+}
+
+void RBtree::verify_property2(NODE *root){	
+	assert(!root->ehVermelho);
+}
+
+bool RBtree::node_color(NODE *root){
+	return root->ehVermelho;
+}
+
+void RBtree::verify_property4(NODE *root){	
+	if(root->ehVermelho){
+		assert(!node_color(root->left));
+		assert(!node_color(root->right));
+		assert(!node_color(root->p));
+	}
+	if(root == NULL) return;
+	verify_property4(root->left);
+	verify_property4(root->right);
+}
+*/
+ RBtree::~RBtree(){ 
+	postOrderDelete(this->root);
+	delete this->Nil;
+}
+

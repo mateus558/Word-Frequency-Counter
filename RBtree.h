@@ -1,11 +1,11 @@
 #ifndef RBTREE_H_
 #define RBTREE_H_
 #include <iostream>
-#include <memory>
+#include <assert.h>
 
 using namespace std;
-template <typename T> struct NODE{
-	T key;
+struct NODE{
+	string key;
 	NODE *right;
 	NODE *left;
 	NODE *p;
@@ -13,61 +13,57 @@ template <typename T> struct NODE{
 	int pos;
 	bool ehVermelho;
 	
-	NODE(){
+	NODE(string key){
+		this->key = key;
+		ehVermelho = false;
 		count = 1;
 	}
-	~NODE(){
-		delete right;
-		delete left;
+	NODE(){
+		this->key = "";
+		ehVermelho = false;
+		count = 0;
 	}
-	/*      ----------
-		Operadores 
-		----------     		*/
-	//Retorna true se os nodes sao iguais	
-	bool operator ==(const NODE& node){		
-		return this->key == node.key;
-	}
-	//Retorna true se os nodes sao diferentes
-	bool operator !=(const NODE& node){		
-		return this->key != node.key;
-	}
+
 };
 
-template<class T> struct Container{
-	NODE<T> **array;
+struct Container{
+	NODE **array;
 	int count;	
 	Container(int K){
 		count = 0;
-		array = new NODE<T>*[K];
+		array = new NODE*[K];
 		for(int i = 0; i < K; i++){
 			array[i] = NULL;
 		}
 	}
-	void push_back(NODE<T>* node){
+	void push_back(NODE* node){
 		array[count] = node;
 		count++;
 	}	
 };
 
-template <class T> class RBtree{
+class RBtree{
 private:
-	NODE<T> *root;
-	NODE<T> *nill;
+	NODE *root;
+	NODE *Nil;
 	int N;
-	void INORDER_TREE_WALK(NODE<T> *root);
-	void RB_insertFixUp(NODE<T> *&z);
-	NODE<T>* tree_insert(T key);	
-	void leftRotate(NODE<T> *&x);
-	void rightRotate(NODE<T> *&y);
-	void TREE_SORT(NODE<T> *root, Container<T> *array) const;
+	long long int T;
+	void INORDER_TREE_WALK(NODE *root);
+	void RB_insertFixUp(NODE *z);
+	NODE* tree_insert(string key);	
+	void leftRotate(NODE *x);
+	void rightRotate(NODE *x);
+	void TREE_SORT(NODE *root, Container *array) const;
 
 public:
-	RBtree(T def_val);
-	void RB_insert(T key);
-	bool search(T val);
+	RBtree();
+	void RB_insert(string key);
+	bool search(string val);
 	int getN(){return N;}
+	int getTotal(){return T;}
 	void display();
-	Container<T>* getSortedList();
+	void postOrderDelete(NODE *n);
+	Container* getSortedList();
 	~RBtree();
 };
 
