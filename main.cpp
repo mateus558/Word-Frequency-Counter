@@ -58,21 +58,27 @@ int main(){
 		cin >> o;
 		switch(o){
 			case 1:
+				//Carrega dados dos arquivos na RBtree
 				opcao1();
 				break;
 			case 2:
+				//Mostra X palavras mais frequentes no conjunto
 				opcao2();
 				break;
 			case 3:
+				//Mostra X palavras mais frequentes em arquivo 
 				opcao3();
 				break;
 			case 4:
+				//Mostra todas palavras que aparecem apenas uma vez no conjunto
 				opcao4();
 				break;
 			case 5:
+				//Sai do programa
 				opcao5();
 				break;
 			default: 
+				//Caso seja informada uma opcao inválida o programa volta no menu
 				erro = true;
 				clear();
 				showMenu(DB->getN());
@@ -80,6 +86,23 @@ int main(){
 		}
 	}
 }
+
+//Salva arquivos em Container em um arquivo
+void save2File(string fileName, Container *array){
+	string path = "Output/" + fileName;	
+	ofstream output(path, ios::out);
+	
+	if(!output){
+		cerr << "\033[1;31mFile could not be opened.\033[0m\n" << endl;
+		exit(3);
+	}
+	for(int i = array->count-1; i > 0; i--){
+			output << array->array[i]->key << " " << array->array[i]->count << endl; 
+	}
+
+	output.close();
+	output.clear();
+}	
 
 void opcao1(){
 	clear();
@@ -106,6 +129,7 @@ void opcao1(){
 		mergeSort(sortedNodes->array, 0, sortedNodes->count-1);
 		finish = clock();	
 		double time = ((double)(finish - start))/CLOCKS_PER_SEC;
+		save2File("opt1.txt", sortedNodes);		
 		clear();
 		showMenu(DB->getN());				
 		//Dados sobre o carregamento do conjunto								
@@ -189,9 +213,16 @@ void opcao4(){
 	if(DB->getN() > 0){			
 		clear();	
 		int i  = 0;
+		ofstream output("Output/opt4.txt", ios::out);
+
 		while(sortedNodes->array[i]->count == 1){
-			cout << sortedNodes->array[i]->key << " - " << sortedNodes->array[i]->count << " occurrences"<< endl; 				i++;
+			cout << sortedNodes->array[i]->key << " - " << sortedNodes->array[i]->count << " occurrences"<< endl;
+			output << sortedNodes->array[i]->key << " " << sortedNodes->array[i]->count << endl; 				
+			i++;
 		}
+		output.close();
+		output.clear();
+
 		cout << "\nPress anything and ENTER to go back to menu..." << endl; 
 		char a;					
 		cin >> a;
