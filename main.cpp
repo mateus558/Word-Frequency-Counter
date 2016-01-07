@@ -153,9 +153,14 @@ void opcao2(){
 		int X;
 		cin >> X;
 		cout << endl;
+		ofstream output("Output/opt2.txt", ios::out);
+	
 		for(int i = sortedNodes->count-1; i > (sortedNodes->count-1 - X); i--){
 			cout << sortedNodes->array[i]->key << " - " << sortedNodes->array[i]->count << " occurrences" << endl; 
+			output << sortedNodes->array[i]->key << " " << sortedNodes->array[i]->count << endl;	
 		}
+		output.close();
+		output.clear();
 		cout << "\nPress anything and ENTER to go back to menu..." << endl; 
 		char a;					
 		cin >> a;
@@ -168,12 +173,14 @@ void opcao3(){
 	if(DB->getN() > 0){				
 		clear();
 		string selFile;
-		ifstream inFile;		
+		ifstream inFile;
+		ofstream output("Output/opt3.txt", ios::out);		
 		file = new RBtree;		
 
 		cout << "Type the name of the file:" << endl;
 		cout << "> ";
 		cin >> selFile;
+		output << selFile + "\n" << endl;
 		inFile.open(string("Input/") + selFile.c_str(), ios::in);
 		if(!inFile){
 			cerr << "\033[1;31mFile could not be opened.\033[0m\n" << endl;
@@ -195,8 +202,11 @@ void opcao3(){
 		cin >> X;
 		cout << endl;
 		for(int i = sortedNodesFile->count-1; i > (sortedNodesFile->count-1 - X); i--){
-			cout << sortedNodesFile->array[i]->key << " - " << sortedNodesFile->array[i]->count << " occurrences" << endl; 
+			cout << sortedNodesFile->array[i]->key << " - " << sortedNodesFile->array[i]->count << " occurrences" << endl;
+			output << sortedNodesFile->array[i]->key << " " << sortedNodesFile->array[i]->count << endl;
 		}
+		output.close();
+		output.clear();
 		cout << "\nPress anything and ENTER to go back to menu..." << endl; 
 		char a;					
 		cin >> a;
