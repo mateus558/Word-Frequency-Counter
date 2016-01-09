@@ -5,10 +5,10 @@
 #include <ctime>
 #include <unistd.h>
 #include <ios>
+#include <sstream>
 #include <vector>
 #include <cstdlib>
 #include "List.h"
-#include <sstream>
 #include "RBtree.h"
 
 using namespace std;
@@ -423,6 +423,7 @@ void mergeSort(NODE **arr, int l, int r){
     }
 }
 
+//Análise de desempenho automático
 void runTimeAnal(){
 	dpdf = opendir("./Input");
 	if(dpdf != NULL){
@@ -442,7 +443,7 @@ void runTimeAnal(){
 	} 
 	ofstream analysis("Output/runa.csv",ios::out);
 	analysis << "N,Palavras Unicas,T(N)" << endl;
-	for(int i = 0; i < temp->size(); i++){
+	for(int i = 0; i <= temp->size(); i++){
 		DB = new RBtree;
 		clock_t start, finish;
 		start = clock();		
@@ -451,7 +452,6 @@ void runTimeAnal(){
 			ifstream inFile[i];
 			string name = temp->at(j);
 			inFile[j].open(string("Input/") + name.c_str(), ios::in);				
-			//cout << "Processing " << name.c_str() << "..." << endl;
 			if(!inFile[j]){
 				cerr << "\033[1;31mFile could not be opened.\033[0m\n" << endl;
 				exit(1);
@@ -479,7 +479,7 @@ void runTimeAnal(){
 		for(int n = 0; n < t.size(); n++)
 			if(t[n] == '.')
 				t[n] = ','; 
-		analysis << DB->getTotal() << " " << DB->getN() << " " << " " << t << endl;
+		analysis << DB->getTotal() << "," << DB->getN() << "," << "\"" << t << "\"" << endl;
 		cout << DB->getTotal() << " " << DB->getN() << " " << " " << t << endl;
 	}
 	analysis.close();
