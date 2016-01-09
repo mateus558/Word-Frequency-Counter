@@ -4,10 +4,11 @@
 #include <fstream>
 #include <ctime>
 #include <unistd.h>
-#include <algorithm>
 #include <ios>
+#include <vector>
 #include <cstdlib>
 #include "List.h"
+#include <sstream>
 #include "RBtree.h"
 
 using namespace std;
@@ -19,13 +20,13 @@ void opcao4();
 void opcao5();
 void showMenu(int sizeList);
 void clear();
-string toLower(string str);
+string formatStr(string str);
 void processFiles();
 void selectFiles();
-void removeSpecialChars(string *word);
 void merge(NODE **arr, int l, int m, int r);
 void mergeSort(NODE **arr, int l, int r);
 bool validFile(string file);
+void runTimeAnal();
 void process_mem_usage(double& vm_usage, double& resident_set);
 
 string def = " ";
@@ -77,6 +78,9 @@ int main(){
 			case 5:
 				//Sai do programa
 				opcao5();
+				break;
+			case 6:
+				runTimeAnal();
 				break;
 			default: 
 				//Caso seja informada uma opcao inválida o programa volta no menu
@@ -189,7 +193,8 @@ void opcao3(){
 		} 
 		string word;
 		while(inFile >> word){
-			removeSpecialChars(&word);
+			//removeSpecialChars(&word);
+			word = formatStr(word);			
 			if(!word.empty()){
 				file->RB_insert(word);
 			}				
@@ -288,13 +293,16 @@ void clear(){
 	for(int i = 0; i < 40; i++) cout << endl;
 }
 
-string toLower(string str){	
+string formatStr(string str){	
+	string result;
 	for(int i = 0; i < str.size(); i++){
-		if(str[i] >= 'A' && str[i] <= 'Z'){
-			str[i] = (char)((int)(str[i]) + 32);
+		if((str[i] >= 'a' && str[i] <= 'z')){
+			result.push_back(str[i]);
+		}else if(str[i] >= 'A' && str[i] <= 'Z'){
+			result.push_back((char)((int)(str[i]) + 32));
 		}  
 	}
-	return str;
+	return result;
 }
 
 bool validFile(string file){
@@ -355,8 +363,7 @@ void processFiles(){
 		//Coloca as palavras do arquivo na estrutura		
 		while(inFile[i] >> word){
 			//Remove caracteres especiais das palavras
-			removeSpecialChars(&word);
-			word = toLower(word);
+			word = formatStr(word);
 			if(!word.empty())
 				DB->RB_insert(word);
 		}
@@ -365,15 +372,6 @@ void processFiles(){
 		x->pop();
 		i++;
  	}
-}
-
-//Funcao para remocao de caracteres especiais
-void removeSpecialChars(string *word){
-	word->resize(remove_if(word->begin(), word->end(),[](char x){return !isalnum(x) && !isspace(x);})-word->begin());
-	/*for(int i = 0; i < word.size(); i++){
-		if((int)word[i] < 97 && (int)word[i] > 122 || (int)word[i] < 65 && (int)word[i] > 90)
-			word.erase(word.begin() + i); 
-	}*/
 }
 
 void merge(NODE **arr, int l, int m, int r){
@@ -423,6 +421,69 @@ void mergeSort(NODE **arr, int l, int r){
         mergeSort(arr, m+1, r);
         merge(arr, l, m, r);
     }
+}
+
+void runTimeAnal(){
+	dpdf = opendir("./Input");
+	if(dpdf != NULL){
+		//Faz leitura dos arquivos no diretório e os adiciona na lista para processamento
+		while(epdf = readdir(dpdf)){
+			string file = string(epdf->d_name);
+			if(validFile(file)){ 		
+				files2Process->push_front(file);
+			}
+		}
+	}
+	closedir(dpdf);
+	vector<string> *temp = new vector<string>;
+	while(files2Process->front() != ""){
+		temp->push_back(files2Process->front());
+		files2Process->pop();
+	} 
+	ofstream analysis("Output/runa.csv",ios::out);
+	analysis << "N,Palavras Unicas,T(N)" << endl;
+	for(int i = 0; i < temp->size(); i++){
+		DB = new RBtree;
+		clock_t start, finish;
+		start = clock();		
+		for(int j = 0; j < i; j++){
+			//Coloca os dados processados no conjunto
+			ifstream inFile[i];
+			string name = temp->at(j);
+			inFile[j].open(string("Input/") + name.c_str(), ios::in);				
+			//cout << "Processing " << name.c_str() << "..." << endl;
+			if(!inFile[j]){
+				cerr << "\033[1;31mFile could not be opened.\033[0m\n" << endl;
+				exit(1);
+			} 
+			string word;		
+			//Coloca as palavras do arquivo na estrutura		
+			while(inFile[j] >> word){
+			//Remove caracteres especiais das palavras
+				word = formatStr(word);
+				if(!word.empty())
+					DB->RB_insert(word);
+			}
+			inFile[j].close();
+			inFile[j].clear();
+		}
+		//Retorna uma lista com os nós ordenados lexicograficamente
+		sortedNodes = DB->getSortedList();
+		//Ordena os nos por frequencia mantendo a ordem em que aparecem					
+		mergeSort(sortedNodes->array, 0, sortedNodes->count-1);
+		finish = clock();	
+		double time = ((double)(finish - start))/CLOCKS_PER_SEC;
+		ostringstream s;
+		s << time;
+		string t = s.str();
+		for(int n = 0; n < t.size(); n++)
+			if(t[n] == '.')
+				t[n] = ','; 
+		analysis << DB->getTotal() << " " << DB->getN() << " " << " " << t << endl;
+		cout << DB->getTotal() << " " << DB->getN() << " " << " " << t << endl;
+	}
+	analysis.close();
+	analysis.clear();
 }
 
 //////////////////////////////////////////////////////////////////////////////
