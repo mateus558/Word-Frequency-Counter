@@ -101,7 +101,7 @@ void save2File(string fileName, Container *array){
 		cerr << "\033[1;31mFile could not be opened.\033[0m\n" << endl;
 		exit(3);
 	}
-	for(int i = array->count-1; i > 0; i--){
+	for(int i = 0; i < array->count; i++){
 			output << array->array[i]->key << " " << array->array[i]->count << endl; 
 	}
 
@@ -160,7 +160,7 @@ void opcao2(){
 		cout << endl;
 		ofstream output("Output/opt2.txt", ios::out);
 	
-		for(int i = sortedNodes->count-1; i > (sortedNodes->count-1 - X); i--){
+		for(int i = 0; i < X; i++){
 			cout << sortedNodes->array[i]->key << " - " << sortedNodes->array[i]->count << " occurrences" << endl; 
 			output << sortedNodes->array[i]->key << " " << sortedNodes->array[i]->count << endl;	
 		}
@@ -389,7 +389,7 @@ void merge(NODE **arr, int l, int m, int r){
     /* Intercala os arrays temporários em arr[l..r]*/
     i = 0; j = 0; k = l;
     while (i < n1 && j < n2){
-        if (L[i]->count <= R[j]->count){
+        if (L[i]->count > R[j]->count){
             arr[k] = L[i];
             i++;
         }

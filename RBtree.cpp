@@ -155,9 +155,9 @@ using namespace std;
 
  void RBtree::TREE_SORT(NODE *root, Container* array) const{
 	if(root != this->Nil){
-		TREE_SORT(root->left, array);
-		array->push_back(root);		
 		TREE_SORT(root->right, array);
+		array->push_back(root);		
+		TREE_SORT(root->left, array);
 	}
 }
 
