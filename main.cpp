@@ -159,7 +159,9 @@ void opcao2(){
 		cin >> X;
 		cout << endl;
 		ofstream output("Output/opt2.txt", ios::out);
-	
+		if(!output){
+			cerr << "Error opening the file" << endl;
+		}	
 		for(int i = 0; i < X; i++){
 			cout << sortedNodes->array[i]->key << " - " << sortedNodes->array[i]->count << " occurrences" << endl; 
 			output << sortedNodes->array[i]->key << " " << sortedNodes->array[i]->count << endl;	
@@ -230,11 +232,12 @@ void opcao4(){
 		clear();	
 		int i  = 0;
 		ofstream output("Output/opt4.txt", ios::out);
-
-		while(sortedNodes->array[i]->count == 1){
+		if(!output){
+			cerr << "Error opening the file!" << endl;
+		}
+		while(sortedNodes->array[i]->count == 1 && i++){
 			cout << sortedNodes->array[i]->key << " - " << sortedNodes->array[i]->count << " occurrences"<< endl;
 			output << sortedNodes->array[i]->key << " " << sortedNodes->array[i]->count << endl; 				
-			i++;
 		}
 		output.close();
 		output.clear();
@@ -267,7 +270,7 @@ void showMenu(int sizeList){
 	cout << "\t\033[42;30m-----------------------------------------------------------------------\033[0m"<< endl;
 	cout << "\t\033[42;30m|                                UFJF                                 |\033[0m" <<endl;
 	cout << "\t\033[42;30m|                                                                     |\033[0m" << endl;
-	cout << "\t\033[42;30m|\t\t\tWord frequency counter V1.0                   |\033[0m" << endl;
+	cout << "\t\t\t\033[42;30m|Word frequency counter V1.0                   |\033[0m" << endl;
 	cout << "\t\033[42;30m|                                                                     |\033[0m" << endl;	
 	cout << "\t\033[42;30m|                                                                     |\033[0m" << endl;
 	cout << "\t\033[42;30m|By: Mateus C. Marim                                                  |\033[0m" << endl;
