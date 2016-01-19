@@ -209,7 +209,7 @@ void opcao3(){
 		int X;
 		cin >> X;
 		cout << endl;
-		for(int i = sortedNodesFile->count-1; i > (sortedNodesFile->count-1 - X); i--){
+		for(int i = 0; i < X; i++){
 			cout << sortedNodesFile->array[i]->key << " - " << sortedNodesFile->array[i]->count << " occurrences" << endl;
 			output << sortedNodesFile->array[i]->key << " " << sortedNodesFile->array[i]->count << endl;
 		}
@@ -230,15 +230,18 @@ void opcao3(){
 void opcao4(){
 	if(DB->getN() > 0){			
 		clear();	
-		int i  = 0;
+		int i  = sortedNodes->count;
 		ofstream output("Output/opt4.txt", ios::out);
 		if(!output){
 			cerr << "Error opening the file!" << endl;
 		}
-		while(sortedNodes->array[i]->count == 1 && i++){
+		while(--i && sortedNodes->array[i]->count == 1);
+					
+		do{
 			cout << sortedNodes->array[i]->key << " - " << sortedNodes->array[i]->count << " occurrences"<< endl;
-			output << sortedNodes->array[i]->key << " " << sortedNodes->array[i]->count << endl; 				
-		}
+			output << sortedNodes->array[i]->key << " " << sortedNodes->array[i]->count << endl;
+		}while(++i && i < sortedNodes->count);
+		
 		output.close();
 		output.clear();
 
@@ -270,7 +273,7 @@ void showMenu(int sizeList){
 	cout << "\t\033[42;30m-----------------------------------------------------------------------\033[0m"<< endl;
 	cout << "\t\033[42;30m|                                UFJF                                 |\033[0m" <<endl;
 	cout << "\t\033[42;30m|                                                                     |\033[0m" << endl;
-	cout << "\t\t\t\033[42;30m|Word frequency counter V1.0                   |\033[0m" << endl;
+	cout << "\t\033[42;30m|\t\t\tWord frequency counter V1.0               \t|\033[0m" << endl;
 	cout << "\t\033[42;30m|                                                                     |\033[0m" << endl;	
 	cout << "\t\033[42;30m|                                                                     |\033[0m" << endl;
 	cout << "\t\033[42;30m|By: Mateus C. Marim                                                  |\033[0m" << endl;
