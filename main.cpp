@@ -111,6 +111,8 @@ void save2File(string fileName, Container *array){
 
 void opcao1(){
 	clear();
+	cout << "Cleaning last DB, if it existed...\n" << endl;
+	delete DB;
 	//O programa faz detecção dos arquivos a serem processados na pasta de entrada				
 	selectFiles();
 	char a;	
@@ -487,6 +489,7 @@ void runTimeAnal(){
 				t[n] = ','; 
 		analysis << DB->getTotal() << "," << DB->getN() << "," << "\"" << t << "\"" << endl;
 		cout << DB->getTotal() << " " << DB->getN() << " " << " " << t << endl;
+		delete DB;
 	}
 	analysis.close();
 	analysis.clear();
