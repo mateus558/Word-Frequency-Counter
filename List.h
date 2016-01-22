@@ -16,8 +16,7 @@ template <typename T> struct LNODE{
 		prev = NULL;
 	}
 	bool operator !=(const LNODE& no){
-			//std::cout << no.item != this->item <<std::endl;
-			return no.item != this->item;
+		return no.item != this->item;
 	}
 };
 

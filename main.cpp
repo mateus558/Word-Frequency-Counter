@@ -313,15 +313,18 @@ string formatStr(string str){
 	return result;
 }
 
-bool validFile(string file){
+bool validFile(string file){	//Verifica se o arquivo é válido
+	//Verifica se o nome do arquivo não está vazio ou se o tamanho é menor que 3
 	if(file.empty() || file.size() < 4)
 		return false;
+	//Verifica se o arquivo é do tipo txt
 	string test = ".txt";
 	int j = 3;
 	for(int i = file.size()-1; i > file.size() - 5; i--, j--){
 		if(file[i] != test[j])
 			return false;
 	}
+	//Se todas condições anteriores são verdadeiras, o arquivo é válido
 	return true;
 }
 
@@ -435,8 +438,8 @@ void mergeSort(NODE **arr, int l, int r){
 void runTimeAnal(){
 	vector<string> *temp = new vector<string>;	
 	dpdf = opendir("./Input");
+	//Faz leitura dos arquivos no diretório e os adiciona na lista para processamento	
 	if(dpdf != NULL){
-		//Faz leitura dos arquivos no diretório e os adiciona na lista para processamento
 		while(epdf = readdir(dpdf)){
 			string file = string(epdf->d_name);
 			if(validFile(file)){ 		
@@ -445,15 +448,16 @@ void runTimeAnal(){
 		}
 	}
 	closedir(dpdf);
-	
+	//Abre arquivo de saída para escrita	
 	ofstream analysis("Output/runa.csv",ios::out);
 	analysis << "N,Palavras Unicas,T(N)" << endl;
+	//Realiza os experimentos aumentando o número de arquivos processados em 1 a cada iteração do for principal
 	for(int i = 0; i <= temp->size(); i++){
 		DB = new RBtree;
 		clock_t start, finish;
 		start = clock();		
 		for(int j = 0; j < i; j++){
-			//Coloca os dados processados no conjunto
+			//Abre arquivo para processar as palavras
 			ifstream inFile[i];
 			string name = temp->at(j);
 			inFile[j].open(string("Input/") + name.c_str(), ios::in);				
@@ -478,12 +482,14 @@ void runTimeAnal(){
 		mergeSort(sortedNodes->array, 0, sortedNodes->count-1);
 		finish = clock();	
 		double time = ((double)(finish - start))/CLOCKS_PER_SEC;
+		//Substitui o . no tempo double por ,
 		ostringstream s;
 		s << time;
 		string t = s.str();
 		for(int n = 0; n < t.size(); n++)
 			if(t[n] == '.')
 				t[n] = ','; 
+		//Manda os resultados do experimento para o arquivo de saída
 		analysis << DB->getTotal() << "," << DB->getN() << "," << "\"" << t << "\"" << endl;
 		cout << DB->getTotal() << " " << DB->getN() << " " << " " << t << endl;
 		delete DB;
