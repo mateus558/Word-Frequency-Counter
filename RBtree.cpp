@@ -68,7 +68,7 @@ using namespace std;
    
     	if ( x->p == Nil )
         	root = y;
-    	else if ( x == x->p->right )
+    	else if (x == x->p->right)
         	x->p->right = y;
     	else
         	x->p->left = y;
@@ -100,24 +100,24 @@ using namespace std;
         	}else{
             		y = z->p->p->left;
            
-            		if ( y->ehVermelho){
-				z->p->ehVermelho = true;
-				y->ehVermelho = true;
-				z->p->p->ehVermelho = true;
-				z = z->p->p;
-            		}else{
-				if (z == z->p->left){
-				    z = z->p;
-				    rightRotate(z);
-				}
-				z->p->ehVermelho = true;
-				z->p->p->ehVermelho = true;
-				leftRotate(z->p->p);
-            		}
-        	}
-    	}	
-    	root->ehVermelho = true;
-    	y = NULL;
+            	if ( y->ehVermelho){
+					z->p->ehVermelho = true;
+					y->ehVermelho = true;
+					z->p->p->ehVermelho = true;
+					z = z->p->p;
+            	}else{
+					if (z == z->p->left){
+					    z = z->p;
+					    rightRotate(z);
+					}
+					z->p->ehVermelho = true;
+					z->p->p->ehVermelho = true;
+					leftRotate(z->p->p);
+            	}
+       	}
+    }	
+    root->ehVermelho = true;
+ 	y = NULL;
 }
 
  void RBtree::RB_insert(string key){
@@ -140,7 +140,7 @@ using namespace std;
 	return false;
 }
 
- void RBtree::INORDER_TREE_WALK(NODE *root){
+void RBtree::INORDER_TREE_WALK(NODE *root){
 	if(root != this->Nil){
 		INORDER_TREE_WALK(root->left);
 		cout << root->key << "-" << root->count+1 << " ";
@@ -148,12 +148,12 @@ using namespace std;
 	}
 }	
 
- void RBtree::display(){
+void RBtree::display(){
 	INORDER_TREE_WALK(this->root);
 	cout << endl;
 }
 
- void RBtree::TREE_SORT(NODE *root, Container* array) const{
+void RBtree::TREE_SORT(NODE *root, Container* array) const{
 	if(root != this->Nil){
 		TREE_SORT(root->right, array);
 		array->push_back(root);		

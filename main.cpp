@@ -238,7 +238,7 @@ void opcao4(){
 			cerr << "Error opening the file!" << endl;
 		}
 		while(--i && sortedNodes->array[i]->count == 1);
-					
+		i++;
 		do{
 			cout << sortedNodes->array[i]->key << " - " << sortedNodes->array[i]->count << " occurrences"<< endl;
 			output << sortedNodes->array[i]->key << " " << sortedNodes->array[i]->count << endl;
@@ -275,7 +275,7 @@ void showMenu(int sizeList){
 	cout << "\t\033[42;30m-----------------------------------------------------------------------\033[0m"<< endl;
 	cout << "\t\033[42;30m|                                UFJF                                 |\033[0m" <<endl;
 	cout << "\t\033[42;30m|                                                                     |\033[0m" << endl;
-	cout << "\t\033[42;30m|\t\t\tWord frequency counter V1.0               \t|\033[0m" << endl;
+	cout << "\t\033[42;30m|\t\tWord frequency counter V3.1415...               \t|\033[0m" << endl;
 	cout << "\t\033[42;30m|                                                                     |\033[0m" << endl;	
 	cout << "\t\033[42;30m|                                                                     |\033[0m" << endl;
 	cout << "\t\033[42;30m|By: Mateus C. Marim                                                  |\033[0m" << endl;
@@ -298,7 +298,7 @@ void showMenu(int sizeList){
 }
 //Limpa a tela
 void clear(){
-	for(int i = 0; i < 40; i++) cout << endl;
+	for(int i = 0; i < 50; i++) cout << endl;
 }
 
 string formatStr(string str){	
@@ -433,22 +433,19 @@ void mergeSort(NODE **arr, int l, int r){
 
 //Análise de desempenho automático
 void runTimeAnal(){
+	vector<string> *temp = new vector<string>;	
 	dpdf = opendir("./Input");
 	if(dpdf != NULL){
 		//Faz leitura dos arquivos no diretório e os adiciona na lista para processamento
 		while(epdf = readdir(dpdf)){
 			string file = string(epdf->d_name);
 			if(validFile(file)){ 		
-				files2Process->push_front(file);
+				temp->push_back(file);
 			}
 		}
 	}
 	closedir(dpdf);
-	vector<string> *temp = new vector<string>;
-	while(files2Process->front() != ""){
-		temp->push_back(files2Process->front());
-		files2Process->pop();
-	} 
+	
 	ofstream analysis("Output/runa.csv",ios::out);
 	analysis << "N,Palavras Unicas,T(N)" << endl;
 	for(int i = 0; i <= temp->size(); i++){
