@@ -65,11 +65,11 @@ int main(){
 				break;
 			case 2:
 				//Mostra X palavras mais frequentes no conjunto
-				opcao2();
+				opcao3();
 				break;
 			case 3:
 				//Mostra X palavras mais frequentes em arquivo 
-				opcao3();
+				opcao2();
 				break;
 			case 4:
 				//Mostra todas palavras que aparecem apenas uma vez no conjunto
@@ -115,6 +115,7 @@ void opcao1(){
 	delete DB;
 	//O programa faz detecção dos arquivos a serem processados na pasta de entrada				
 	selectFiles();
+	DB->flag = 0;
 	char a;	
 	if(files2Process->size() > 0){
 		cout << "Do you want to proceed? (y/n): ";
@@ -156,7 +157,7 @@ void opcao2(){
 		exit(0);
 	}else{
 		clear();
-		cout << "Enter X: " << endl;
+		cout << "Enter X (Total size: " << DB->getN() << "): " << endl;
 		int X;
 		cin >> X;
 		cout << endl;
@@ -164,10 +165,12 @@ void opcao2(){
 		if(!output){
 			cerr << "Error opening the file" << endl;
 		}	
-		for(int i = 0; i < X; i++){
-			cout << sortedNodes->array[i]->key << " - " << sortedNodes->array[i]->count << " occurrences" << endl; 
-			output << sortedNodes->array[i]->key << " " << sortedNodes->array[i]->count << endl;	
-		}
+		if(X <= DB->getN()){
+			for(int i = 0; i < X; i++){
+				cout << sortedNodes->array[i]->key << " - " << sortedNodes->array[i]->count << " occurrences" << endl; 
+				output << sortedNodes->array[i]->key << " " << sortedNodes->array[i]->count << endl;	
+			}
+		}else cerr << "Size exceeded!" << endl;
 		output.close();
 		output.clear();
 		cout << "\nPress anything and ENTER to go back to menu..." << endl; 
@@ -179,7 +182,7 @@ void opcao2(){
 }
 
 void opcao3(){
-	if(DB->getN() > 0){				
+	if(DB->getN() >= 0){				
 		clear();
 		string selFile;
 		ifstream inFile;
@@ -195,25 +198,31 @@ void opcao3(){
 			cerr << "\033[1;31mFile could not be opened.\033[0m\n" << endl;
 			exit(1);
 		} 
+		file->flag = 1;
 		string word;
 		while(inFile >> word){
-			//removeSpecialChars(&word);
 			word = formatStr(word);			
 			if(!word.empty()){
 				file->RB_insert(word);
 			}				
 		}
 		inFile.close();
+		delete sortedNodes;
 		sortedNodesFile = file->getSortedList();
 		//Ordena os nos por frequencia mantendo a ordem em que aparecem					
 		mergeSort(sortedNodesFile->array, 0, sortedNodesFile->count-1);
-		cout << "\nEnter X: " << endl;
+		DB = file;		
+		cout << "\nEnter X (Total size: " << DB->getN() << "): " << endl;
 		int X;
 		cin >> X;
 		cout << endl;
-		for(int i = 0; i < X; i++){
-			cout << sortedNodesFile->array[i]->key << " - " << sortedNodesFile->array[i]->count << " occurrences" << endl;
-			output << sortedNodesFile->array[i]->key << " " << sortedNodesFile->array[i]->count << endl;
+		if(X <= DB->getN()){			
+			for(int i = 0; i < X; i++){
+				cout << sortedNodesFile->array[i]->key << " - " << sortedNodesFile->array[i]->count << " occurrences" << endl;
+				output << sortedNodesFile->array[i]->key << " " << sortedNodesFile->array[i]->count << endl;
+			}
+		}else{
+			cerr << "Size exceeded!" << endl;
 		}
 		output.close();
 		output.clear();
@@ -232,18 +241,25 @@ void opcao3(){
 void opcao4(){
 	if(DB->getN() > 0){			
 		clear();	
-		int i  = sortedNodes->count;
-		ofstream output("Output/opt4.txt", ios::out);
+		ofstream output("Output/opt4.txt", ios::out);	//Abre arquivo para saída
 		if(!output){
 			cerr << "Error opening the file!" << endl;
 		}
-		while(--i && sortedNodes->array[i]->count == 1);
+		int i = 0;
+		if(DB->flag == 1){	//Informa que o DB é de um único arquivo
+			sortedNodes = sortedNodesFile;		
+		}
+		i  = sortedNodes->count;	
+		while(i-- && sortedNodes->array[i]->count == 1);	//Leva o i na posição em que a frequencia 1 começa 
 		i++;
-		do{
-			cout << sortedNodes->array[i]->key << " - " << sortedNodes->array[i]->count << " occurrences"<< endl;
-			output << sortedNodes->array[i]->key << " " << sortedNodes->array[i]->count << endl;
-		}while(++i && i < sortedNodes->count);
-		
+		if(i < sortedNodes->count){	//Imprime os nós de frequencia 1 se existirem
+			do{
+				cout << sortedNodes->array[i]->key << " - " << sortedNodes->array[i]->count << " occurrence"<< endl;
+				output << sortedNodes->array[i]->key << " " << sortedNodes->array[i]->count << endl;
+			}while(++i && i < sortedNodes->count);
+		}else{
+			cout << "Nao existem palavras que ocorrem apenas uma vez!" << endl;
+		}
 		output.close();
 		output.clear();
 
@@ -286,13 +302,13 @@ void showMenu(int sizeList){
 	cout << "\t\033[102;30mOptions:                                                               \033[0m" << endl;
 	cout << endl;
 	cout << "\t1 - Select files to process" << endl;
+	cout << "\t2 - X more frequent words in specific DB" << endl;
 	if(sizeList > 0){
-		cout << "\t2 - X more frequent words in all DB" << endl;
-		cout << "\t3 - X more frequent words in specific DB" << endl;
+		cout << "\t3 - X more frequent words in all DB" << endl;
 		cout << "\t4 - All words that occur only one time" << endl;
 		cout << "\t5 - Exit program" << endl;
 	}else{
-		cout << "\t2 - Exit program" << endl;
+		cout << "\t3 - Exit program" << endl;
 	}
 	cout << endl;
 }
@@ -303,6 +319,7 @@ void clear(){
 
 string formatStr(string str){	
 	string result;
+	//Retira os caracteres especiais e joga as letras maiusculas para minusculas
 	for(int i = 0; i < str.size(); i++){
 		if((str[i] >= 'a' && str[i] <= 'z')){
 			result.push_back(str[i]);

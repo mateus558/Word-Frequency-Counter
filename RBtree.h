@@ -39,6 +39,11 @@ struct Container{
 	void push_back(NODE* node){
 		array[count] = node;
 		count++;
+	}
+	~Container(){
+		for(int i = 0; i < count; i++){
+			delete array[i];
+		}
 	}	
 };
 
@@ -57,6 +62,7 @@ private:
 
 public:
 	RBtree();
+	int flag;
 	void RB_insert(string key);
 	bool search(string val);
 	int getN(){return N;}
