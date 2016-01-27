@@ -1,6 +1,19 @@
 #include "Set.h"
+#include <utility>
+#include <algorithm>
+#include <vector>
 
 using namespace std; 
+
+typedef pair<int, string> NodeInfo;
+
+bool comp(NodeInfo a, NodeInfo b){
+	return a.second < b.second;
+}
+
+bool comp1(NodeInfo a, NodeInfo b){
+	return a.second > b.second;
+}
 
 Set::Set(int nFiles){
 	this->Nil = new NODE(nFiles);
@@ -245,6 +258,102 @@ void Set::mergeSort(NODE **arr, int l, int r){
     }
 }
 
+
+void merge1(NODE **arr, int l, int m, int r,string file){
+	int i, j, k;
+    int n1 = m - l + 1;
+    int n2 =  r - m;
+ 
+    /* Cria arrays temporários */
+    NODE *L[n1], *R[n2];
+ 
+    /* Copia dados para arrays temporários L e R */
+    for(i = 0; i < n1; i++) L[i] = arr[l + i];
+    for(j = 0; j < n2; j++) R[j] = arr[m + 1+ j];
+ 
+    /* Intercala os arrays temporários em arr[l..r]*/
+    i = 0; j = 0; k = l;
+    while (i < n1 && j < n2){
+        if (L[i]->files->getFreq(file) > R[j]->files->getFreq(file)){
+            arr[k] = L[i];
+            i++;
+        }
+        else{
+            arr[k] = R[j];
+            j++;
+        }
+        k++;
+    }
+ 
+    /* Copia os elementos restantes em L[], se existe algum */
+    while (i < n1){
+        arr[k] = L[i];
+        i++; k++;
+    }
+ 
+    /* Copia os elementos restantes em R[], se existe algum */
+    while (j < n2){
+        arr[k] = R[j];
+        j++; k++;
+    }
+}
+
+void mergeSort1(NODE **arr, int l, int r, string file){
+	if (l < r){
+        int m = l+(r-l)/2; //O mesmo que (l+r)/2, mas evita overflow para valores grandes de l e h
+        mergeSort1(arr, l, m, file);
+        mergeSort1(arr, m+1, r,file);
+        merge1(arr, l, m, r,file);
+    }
+}
+
+void merge2(NODE **arr, int l, int m, int r,string file){
+	int i, j, k;
+    int n1 = m - l + 1;
+    int n2 =  r - m;
+ 
+    /* Cria arrays temporários */
+    NODE *L[n1], *R[n2];
+ 
+    /* Copia dados para arrays temporários L e R */
+    for(i = 0; i < n1; i++) L[i] = arr[l + i];
+    for(j = 0; j < n2; j++) R[j] = arr[m + 1+ j];
+ 
+    /* Intercala os arrays temporários em arr[l..r]*/
+    i = 0; j = 0; k = l;
+    while (i < n1 && j < n2){
+        if (L[i]->key > R[j]->key){
+            arr[k] = L[i];
+            i++;
+        }
+        else{
+            arr[k] = R[j];
+            j++;
+        }
+        k++;
+    }
+ 
+    /* Copia os elementos restantes em L[], se existe algum */
+    while (i < n1){
+        arr[k] = L[i];
+        i++; k++;
+    }
+ 
+    /* Copia os elementos restantes em R[], se existe algum */
+    while (j < n2){
+        arr[k] = R[j];
+        j++; k++;
+    }
+}
+
+void mergeSort2(NODE **arr, int l, int r, string file){
+	if (l < r){
+        int m = l+(r-l)/2; //O mesmo que (l+r)/2, mas evita overflow para valores grandes de l e h
+        mergeSort2(arr, l, m, file);
+        mergeSort2(arr, m+1, r,file);
+        merge2(arr, l, m, r,file);
+    }
+}
 void Set::displayUsedFiles(){
 	usedFiles->display();
 }
@@ -268,14 +377,33 @@ void Set::displayXmoreFrequent(int X){
 void Set::displayXmoreFrequentByFile(string fileName, int X){
 		ofstream output("Output/opt3.txt", ios::out);		//Abre arquivo de saída
 		output << fileName + "\n" << endl;
+		vector<pair<int, string> > temp;
+		Container* arr = new Container(X);
 		if(X <= N){			
-			for(int i = 0; i < X; i++){
+			for(int i = 0, j = 0; j != X; i++){
 				int freq = sortedNodes->array[i]->files->getFreq(fileName);				
-				if(freq > 0){				
-					cout << sortedNodes->array[i]->key << " - " << freq << " occurrences" << endl;
+				if(freq != -1){				
+					//cout << sortedNodes->array[i]->key << " - " << freq << " occurrences" << endl;
+					arr->push_back(sortedNodes->array[i]);					
+					//NodeInfo inf = make_pair(freq, sortedNodes->array[i]->key);
+				//	temp.insert(temp.begin(),inf);
 					output << sortedNodes->array[i]->key << " " << freq << endl;
-				}else i--;
+					j++;
+				}
 			}
+			mergeSort2(arr->array,0,arr->count-1,fileName);
+			mergeSort1(arr->array,0, arr->count-1, fileName);
+			
+			for(int i = 0; i < X; i++){
+				int freq = arr->array[i]->files->getFreq(fileName); 
+				cout << arr->array[i]->key << " " << freq << endl;
+			}
+/*			sort(temp.begin(), temp.end(), &comp);
+			stable_sort(temp.begin(),temp.end(), greater<NodeInfo>());
+			vector<NodeInfo>::iterator itr = temp.begin();
+			for(; itr != temp.end(); itr++){
+				cout << (*itr).first << " " << (*itr).second << endl; 
+			}*/
 		}else{
 			cerr << "Size exceeded!" << endl;
 		}

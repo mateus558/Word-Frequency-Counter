@@ -35,7 +35,6 @@ void Hash::insert(string data){
 		table[p] = e;
 		N++;
 	} 
-	//display();
 }
 
 bool Hash::find(string data){
