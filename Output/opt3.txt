@@ -1,2 +1,6 @@
-q
+teste.txt
 
+the 9
+of 3
+and 3
+to 1

@@ -1,15 +1,12 @@
-#include <iostream>
-#include <string>
+#include "stack.h"
+#include "Set.h"
 #include <dirent.h>
-#include <fstream>
 #include <ctime>
 #include <unistd.h>
 #include <ios>
 #include <sstream>
 #include <vector>
 #include <cstdlib>
-#include "List.h"
-#include "RBtree.h"
 
 using namespace std;
 
@@ -31,20 +28,19 @@ void process_mem_usage(double& vm_usage, double& resident_set);
 
 string def = " ";
 Container *sortedNodes;	//Container para receber os nos ordenados
-List<string> *files2Process;	//Lista para os arquivos a serem processados
-RBtree *DB;	//Conjunto para adicionar as palavras (Arvore vermelho-preta)
-RBtree *file;	
+stack<string> files2Process;	//Lista para os arquivos a serem processados
+Set *DB;	//Conjunto para adicionar as palavras (Arvore vermelho-preta)
+Set *file;	
 Container *sortedNodesFile;	//Container para receber os nos ordenados
 DIR *dpdf;
 bool erro;
+int nFiles;
 struct dirent *epdf;
 
 int main(){
 	clear();
 	erro = false;	
-	files2Process = new List<string>("");
-	DB = new RBtree;
-	showMenu(files2Process->size());
+	showMenu(files2Process.size());
 	int o;	
 	while(1){
 		if(erro){
@@ -60,7 +56,7 @@ int main(){
 		cin >> o;
 		switch(o){
 			case 1:
-				//Carrega dados dos arquivos na RBtree
+				//Carrega dados dos arquivos na Set
 				opcao1();
 				break;
 			case 2:
@@ -76,10 +72,21 @@ int main(){
 				opcao4();
 				break;
 			case 5:
+				//Mostra arquivos usados pela DB
+				clear();
+				DB->displayUsedFiles();
+				cout <<"\n" << DB->getNFiles() << " files processed." << endl;
+				cout << "\nTo go back to menu press any key and ENTER...\n" << endl;
+				char a;
+				cin >> a;
+				clear();
+				showMenu(DB->getN());
+				break;
+			case 6:
 				//Sai do programa
 				opcao5();
 				break;
-			case 6:
+			case 7:
 				runTimeAnal();
 				break;
 			default: 
@@ -115,13 +122,12 @@ void opcao1(){
 	delete DB;
 	//O programa faz detecção dos arquivos a serem processados na pasta de entrada				
 	selectFiles();
-	DB->flag = 0;
 	char a;	
-	if(files2Process->size() > 0){
+	if(files2Process.size() > 0){
 		cout << "Do you want to proceed? (y/n): ";
 		cin >> a;
 	}else{
-		delete files2Process;
+		while(!files2Process.empty()) files2Process.pop();
 		a = 'n';
 	}
 	//Se o usuário escolhe continuar com os arquivos eles são processados senao a operação é cancelada
@@ -131,10 +137,7 @@ void opcao1(){
 		start = clock();
 		//Coloca os dados processados no conjunto
 		processFiles(); 
-		//Retorna uma lista com os nós ordenados lexicograficamente
-		sortedNodes = DB->getSortedList();
-		//Ordena os nos por frequencia mantendo a ordem em que aparecem					
-		mergeSort(sortedNodes->array, 0, sortedNodes->count-1);
+		sortedNodes = DB->result();
 		finish = clock();	
 		double time = ((double)(finish - start))/CLOCKS_PER_SEC;
 		save2File("opt1.txt", sortedNodes);		
@@ -145,7 +148,7 @@ void opcao1(){
 		//DB->display();					
 		cout << DB->getN() << " palavras unicas e total de " << DB->getTotal() << " palavras.\n" << endl;
 	}else{
-		files2Process = new List<string>("");
+		while(!files2Process.empty()) files2Process.pop();
 		clear();
 		showMenu(DB->getN());
 		cerr << "\033[1;31mOperation canceled.\033[0m\n" << endl;
@@ -161,18 +164,7 @@ void opcao2(){
 		int X;
 		cin >> X;
 		cout << endl;
-		ofstream output("Output/opt2.txt", ios::out);
-		if(!output){
-			cerr << "Error opening the file" << endl;
-		}	
-		if(X <= DB->getN()){
-			for(int i = 0; i < X; i++){
-				cout << sortedNodes->array[i]->key << " - " << sortedNodes->array[i]->count << " occurrences" << endl; 
-				output << sortedNodes->array[i]->key << " " << sortedNodes->array[i]->count << endl;	
-			}
-		}else cerr << "Size exceeded!" << endl;
-		output.close();
-		output.clear();
+		DB->displayXmoreFrequent(X);
 		cout << "\nPress anything and ENTER to go back to menu..." << endl; 
 		char a;					
 		cin >> a;
@@ -182,50 +174,19 @@ void opcao2(){
 }
 
 void opcao3(){
-	if(DB->getN() >= 0){				
+	if(DB->getN() > 0){				
 		clear();
 		string selFile;
-		ifstream inFile;
-		ofstream output("Output/opt3.txt", ios::out);		
-		file = new RBtree;		
 
 		cout << "Type the name of the file:" << endl;
 		cout << "> ";
 		cin >> selFile;
-		output << selFile + "\n" << endl;
-		inFile.open(string("Input/") + selFile.c_str(), ios::in);
-		if(!inFile){
-			cerr << "\033[1;31mFile could not be opened.\033[0m\n" << endl;
-			exit(1);
-		} 
-		file->flag = 1;
-		string word;
-		while(inFile >> word){
-			word = formatStr(word);			
-			if(!word.empty()){
-				file->RB_insert(word);
-			}				
-		}
-		inFile.close();
-		delete sortedNodes;
-		sortedNodesFile = file->getSortedList();
-		//Ordena os nos por frequencia mantendo a ordem em que aparecem					
-		mergeSort(sortedNodesFile->array, 0, sortedNodesFile->count-1);
-		DB = file;		
+			
 		cout << "\nEnter X (Total size: " << DB->getN() << "): " << endl;
 		int X;
 		cin >> X;
 		cout << endl;
-		if(X <= DB->getN()){			
-			for(int i = 0; i < X; i++){
-				cout << sortedNodesFile->array[i]->key << " - " << sortedNodesFile->array[i]->count << " occurrences" << endl;
-				output << sortedNodesFile->array[i]->key << " " << sortedNodesFile->array[i]->count << endl;
-			}
-		}else{
-			cerr << "Size exceeded!" << endl;
-		}
-		output.close();
-		output.clear();
+		DB->displayXmoreFrequentByFile(selFile, X);
 		cout << "\nPress anything and ENTER to go back to menu..." << endl; 
 		char a;					
 		cin >> a;
@@ -243,13 +204,12 @@ void opcao4(){
 		clear();	
 		ofstream output("Output/opt4.txt", ios::out);	//Abre arquivo para saída
 		if(!output){
-			cerr << "Error opening the file!" << endl;
+			clear();
+			showMenu(DB->getN());
+			cerr << "\033[1;31mFile could not be opened.\033[0m\n" << endl;
+			return;	
 		}
-		int i = 0;
-		if(DB->flag == 1){	//Informa que o DB é de um único arquivo
-			sortedNodes = sortedNodesFile;		
-		}
-		i  = sortedNodes->count;	
+		int i  = sortedNodes->count;	
 		while(i-- && sortedNodes->array[i]->count == 1);	//Leva o i na posição em que a frequencia 1 começa 
 		i++;
 		if(i < sortedNodes->count){	//Imprime os nós de frequencia 1 se existirem
@@ -291,7 +251,7 @@ void showMenu(int sizeList){
 	cout << "\t\033[42;30m-----------------------------------------------------------------------\033[0m"<< endl;
 	cout << "\t\033[42;30m|                                UFJF                                 |\033[0m" <<endl;
 	cout << "\t\033[42;30m|                                                                     |\033[0m" << endl;
-	cout << "\t\033[42;30m|\t\tWord frequency counter V3.1415...               \t|\033[0m" << endl;
+	cout << "\t\033[42;30m|\t\tWord frequency counter V3.1415926...	             \t|\033[0m" << endl;
 	cout << "\t\033[42;30m|                                                                     |\033[0m" << endl;	
 	cout << "\t\033[42;30m|                                                                     |\033[0m" << endl;
 	cout << "\t\033[42;30m|By: Mateus C. Marim                                                  |\033[0m" << endl;
@@ -306,7 +266,8 @@ void showMenu(int sizeList){
 	if(sizeList > 0){
 		cout << "\t3 - X more frequent words in all DB" << endl;
 		cout << "\t4 - All words that occur only one time" << endl;
-		cout << "\t5 - Exit program" << endl;
+		cout << "\t5 - Display the name of the files processed" << endl;
+		cout << "\t6 - Exit program" << endl;
 	}else{
 		cout << "\t3 - Exit program" << endl;
 	}
@@ -320,7 +281,7 @@ void clear(){
 string formatStr(string str){	
 	string result;
 	//Retira os caracteres especiais e joga as letras maiusculas para minusculas
-	for(int i = 0; i < str.size(); i++){
+	for(unsigned int i = 0; i < str.size(); i++){
 		if((str[i] >= 'a' && str[i] <= 'z')){
 			result.push_back(str[i]);
 		}else if(str[i] >= 'A' && str[i] <= 'Z'){
@@ -337,7 +298,7 @@ bool validFile(string file){	//Verifica se o arquivo é válido
 	//Verifica se o arquivo é do tipo txt
 	string test = ".txt";
 	int j = 3;
-	for(int i = file.size()-1; i > file.size() - 5; i--, j--){
+	for(unsigned int i = file.size()-1; i > file.size() - 5; i--, j--){
 		if(file[i] != test[j])
 			return false;
 	}
@@ -352,103 +313,62 @@ void selectFiles(){
 	cin >> a;
 	if(a == 'n')
 		return;
+	while(!files2Process.empty()){files2Process.pop();}
 	//Abre o diretório com os arquivos para serem processados
 	dpdf = opendir("./Input");
 	if(dpdf != NULL){
 		//Faz leitura dos arquivos no diretório e os adiciona na lista para processamento
-		while(epdf = readdir(dpdf)){
+		while((epdf = readdir(dpdf))){
 			string file = string(epdf->d_name);
-			if(validFile(file)){ 		
-				files2Process->push_front(file);
+			if(validFile(file) && !file.empty()){ 		
+				files2Process.push(file);
 			}
 		}
 	}
 	closedir(dpdf);
 	//Mostra ao usuário os arquivos escolhidos para processamento
 	cout << "\n-Files detected:\n";
-	files2Process->display();
-	cout << "\n" << files2Process->size() << " files found...\n" << endl;	
+	stack<string> temp;
+	while(!files2Process.empty()){
+		cout << files2Process.top() << endl;
+		temp.push(files2Process.top());		
+		files2Process.pop();
+	}
+	files2Process = temp;
+	cout << "\n" << files2Process.size() << " files found...\n" << endl;	
+	nFiles = files2Process.size();
 }
 
 void processFiles(){
-	List<string> *x = files2Process;	
-	ifstream inFile[files2Process->size()];
-	DB = new RBtree;
-	int i = 0, tam = x->size();
+	stack<string> temp = files2Process;	
+	ifstream inFile[files2Process.size()];	
+	DB = new Set(nFiles);
+	int i = 0;
 
 	//Abre arquivos contidos na lista
-	while(x->front() != ""){
-		if(i == tam) break;
-		inFile[i].open(string("Input/") + (x->front()).c_str(), ios::in);				
-
-		cout << "Processing " << (x->front()).c_str() << "..." << endl;
-		if(!inFile[i]){
+	while(!temp.empty()){ 
+		string file2open = string("Input/") + string((temp.top()).c_str());
+		inFile[i].open(file2open, ios::in);				
+		cout << "Processing " << (temp.top()).c_str() << "..." << endl;
+		if(!inFile[i]){			
 			cerr << "\033[1;31mFile could not be opened.\033[0m\n" << endl;
-			exit(1);
+			return;
 		} 
-
 		string word;		
 		//Coloca as palavras do arquivo na estrutura		
 		while(inFile[i] >> word){
-			//Remove caracteres especiais das palavras
+			//Remove caracteres especiais das palavra			
 			word = formatStr(word);
-			if(!word.empty())
-				DB->RB_insert(word);
+			if(!word.empty()){
+				DB->RB_insert(word, temp.top());
+			}
 		}
 		inFile[i].close();
 		inFile[i].clear();
-		x->pop();
 		i++;
+		DB->insertUsedFile(temp.top());
+		temp.pop();
  	}
-}
-
-void merge(NODE **arr, int l, int m, int r){
-    int i, j, k;
-    int n1 = m - l + 1;
-    int n2 =  r - m;
- 
-    /* Cria arrays temporários */
-    NODE *L[n1], *R[n2];
- 
-    /* Copia dados para arrays temporários L e R */
-    for(i = 0; i < n1; i++) L[i] = arr[l + i];
-    for(j = 0; j < n2; j++) R[j] = arr[m + 1+ j];
- 
-    /* Intercala os arrays temporários em arr[l..r]*/
-    i = 0; j = 0; k = l;
-    while (i < n1 && j < n2){
-        if (L[i]->count > R[j]->count){
-            arr[k] = L[i];
-            i++;
-        }
-        else{
-            arr[k] = R[j];
-            j++;
-        }
-        k++;
-    }
- 
-    /* Copia os elementos restantes em L[], se existe algum */
-    while (i < n1){
-        arr[k] = L[i];
-        i++; k++;
-    }
- 
-    /* Copia os elementos restantes em R[], se existe algum */
-    while (j < n2){
-        arr[k] = R[j];
-        j++; k++;
-    }
-}
- 
-/* l é para o indice da esquerda e r é o indice da direita do sub-array para ser ordenado */
-void mergeSort(NODE **arr, int l, int r){
-    if (l < r){
-        int m = l+(r-l)/2; //O mesmo que (l+r)/2, mas evita overflow para valores grandes de l e h
-        mergeSort(arr, l, m);
-        mergeSort(arr, m+1, r);
-        merge(arr, l, m, r);
-    }
 }
 
 //Análise de desempenho automático
@@ -457,7 +377,7 @@ void runTimeAnal(){
 	dpdf = opendir("./Input");
 	//Faz leitura dos arquivos no diretório e os adiciona na lista para processamento	
 	if(dpdf != NULL){
-		while(epdf = readdir(dpdf)){
+		while((epdf = readdir(dpdf))){
 			string file = string(epdf->d_name);
 			if(validFile(file)){ 		
 				temp->push_back(file);
@@ -469,11 +389,11 @@ void runTimeAnal(){
 	ofstream analysis("Output/runa.csv",ios::out);
 	analysis << "N,Palavras Unicas,T(N)" << endl;
 	//Realiza os experimentos aumentando o número de arquivos processados em 1 a cada iteração do for principal
-	for(int i = 0; i <= temp->size(); i++){
-		DB = new RBtree;
+	for(unsigned int i = 0; i <= temp->size(); i++){
+		DB = new Set(i);
 		clock_t start, finish;
 		start = clock();		
-		for(int j = 0; j < i; j++){
+		for(unsigned int j = 0; j < i; j++){
 			//Abre arquivo para processar as palavras
 			ifstream inFile[i];
 			string name = temp->at(j);
@@ -488,22 +408,19 @@ void runTimeAnal(){
 			//Remove caracteres especiais das palavras
 				word = formatStr(word);
 				if(!word.empty())
-					DB->RB_insert(word);
+					DB->RB_insert(word, name);
 			}
 			inFile[j].close();
 			inFile[j].clear();
 		}
-		//Retorna uma lista com os nós ordenados lexicograficamente
-		sortedNodes = DB->getSortedList();
-		//Ordena os nos por frequencia mantendo a ordem em que aparecem					
-		mergeSort(sortedNodes->array, 0, sortedNodes->count-1);
+		sortedNodes = DB->result();
 		finish = clock();	
 		double time = ((double)(finish - start))/CLOCKS_PER_SEC;
 		//Substitui o . no tempo double por ,
 		ostringstream s;
 		s << time;
 		string t = s.str();
-		for(int n = 0; n < t.size(); n++)
+		for(unsigned int n = 0; n < t.size(); n++)
 			if(t[n] == '.')
 				t[n] = ','; 
 		//Manda os resultados do experimento para o arquivo de saída
@@ -518,7 +435,7 @@ void runTimeAnal(){
 //////////////////////////////////////////////////////////////////////////////
 //
 // process_mem_usage(double &, double &) - takes two doubles by reference,
-// attempts to read the system-dependent data for a process' virtual memory
+// attempts to read the system-dependent key for a process' virtual memory
 // size and resident set size, and return the results in KB.
 //
 // On failure, returns 0.0, 0.0

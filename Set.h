@@ -1,25 +1,33 @@
-#ifndef RBTREE_H_
-#define RBTREE_H_
+#ifndef Set_H_
+#define Set_H_
 #include <iostream>
 #include <assert.h>
+#include <string>
+#include <fstream>
+#include "Hash.h" 
 
 using namespace std;
+
 struct NODE{
 	string key;
+	Hash *files;
 	NODE *right;
 	NODE *left;
 	NODE *p;
 	int count;
 	int pos;
 	bool ehVermelho;
-	
-	NODE(string key){
+	NODE(string key, int nFiles){
+		files = new Hash(nFiles);
 		this->key = key;
 		ehVermelho = false;
 		count = 1;
 	}
-	NODE(){
-		this->key = "";
+	void addFile(string file){
+		this->files->insert(file);
+	}
+	NODE(int nFiles){
+		files = new Hash(nFiles);
 		ehVermelho = false;
 		count = 0;
 	}
@@ -47,30 +55,39 @@ struct Container{
 	}	
 };
 
-class RBtree{
+class Set{
 private:
 	NODE *root;
 	NODE *Nil;
+	Hash *usedFiles;
+	Container* sortedNodes;
+	int nFiles;
 	int N;
 	long long int T;
 	void INORDER_TREE_WALK(NODE *root);
 	void RB_insertFixUp(NODE *z);
-	NODE* tree_insert(string key);	
+	NODE* tree_insert(string key, string file);	
 	void leftRotate(NODE *x);
 	void rightRotate(NODE *x);
 	void TREE_SORT(NODE *root, Container *array) const;
-
+	void merge(NODE **arr, int l, int m, int r);
+	void mergeSort(NODE **arr, int l, int r);
 public:
-	RBtree();
-	int flag;
-	void RB_insert(string key);
+	Set(int nFiles);
+	void insertUsedFile(string fileName);
+	void RB_insert(string key, string file);
 	bool search(string val);
 	int getN(){return N;}
 	int getTotal(){return T;}
 	void display();
+	void displayUsedFiles();
+	void displayXmoreFrequent(int X);
+	void displayXmoreFrequentByFile(string fileName, int X);
+	int getNFiles(){return nFiles;}
+	Container* result();
 	void postOrderDelete(NODE *n);
 	Container* getSortedList();
-	~RBtree();
+	~Set();
 };
 
 #endif
