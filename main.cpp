@@ -29,9 +29,9 @@ Container *sortedNodes;	//Container para receber os nos ordenados
 stack<string> files2Process;	//Lista para os arquivos a serem processados
 Set *DB;	//Conjunto para adicionar as palavras (Arvore vermelho-preta)
 Container *sortedNodesFile;	//Container para receber os nos ordenados
-DIR *dpdf;
 bool erro;
 int nFiles;
+DIR *dpdf;
 struct dirent *epdf;
 
 int main(){
@@ -143,7 +143,6 @@ void opcao1(){
 		//Dados sobre o carregamento do conjunto								
 		cout << "\033[1;34mDB loaded in " << time << "\033[1;34m seconds.\033[0m\n" << endl;		
 		//DB->display();					
-		cout << DB->getN() << " palavras unicas e total de " << DB->getTotal() << " palavras.\n" << endl;
 	}else{
 		while(!files2Process.empty()) files2Process.pop();
 		clear();
@@ -259,8 +258,8 @@ void showMenu(int sizeList){
 	cout << "\t\033[102;30mOptions:                                                               \033[0m" << endl;
 	cout << endl;
 	cout << "\t1 - Select files to process" << endl;
-	cout << "\t2 - X more frequent words in specific DB" << endl;
 	if(sizeList > 0){
+		cout << "\t2 - X more frequent words in specific DB" << endl;
 		cout << "\t3 - X more frequent words in all DB" << endl;
 		cout << "\t4 - All words that occur only one time" << endl;
 		cout << "\t5 - Display the name of the files processed" << endl;
