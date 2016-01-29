@@ -1,33 +1,22 @@
 #include "Set.h"
-#include <utility>
-#include <algorithm>
-#include <vector>
+#define sortFreq true
+#define sortWord false
 
 using namespace std; 
-
-typedef pair<int, string> NodeInfo;
-
-bool comp(NodeInfo a, NodeInfo b){
-	return a.second < b.second;
-}
-
-bool comp1(NodeInfo a, NodeInfo b){
-	return a.second > b.second;
-}
 
 Set::Set(int nFiles){
 	this->Nil = new NODE(nFiles);
 	this->nFiles = nFiles;
-	this->usedFiles = new Hash(nFiles);
+	countF = 0;
+	fileNWords = vector<int>(nFiles,0);
 	this->root = Nil;
 	N = 0;
 	T = 0;
 }
 
-NODE* Set::tree_insert(string key, string file){	//Inserção de arvore binária
+NODE* Set::tree_insert(string key, int i){	//Inserção de arvore binária
 	NODE *y = this->Nil;
 	NODE *x = this->root;
-
 	while(x != Nil){
 		y = x;
 		if(key < x->key){
@@ -35,8 +24,8 @@ NODE* Set::tree_insert(string key, string file){	//Inserção de arvore binária
 		}else if(key > x->key){
 			x = x->right;			
 		}else{
-			x->addFile(file);
-			x->count++;
+			x->localFreq[i]++;
+			x->globalFreq++;
 			T++;
 			return NULL;
 		}
@@ -44,12 +33,11 @@ NODE* Set::tree_insert(string key, string file){	//Inserção de arvore binária
 	
 	N++;
 	T++;
-	
+	fileNWords[i]++;
 	NODE *z = new NODE(nFiles);
-	z->addFile(file);
 	z->key = key;
 	z->p = y;
-	z->count++;
+	z->globalFreq++;
 	z->right = z->left = this->Nil;
 	z->ehVermelho = true;
 
@@ -63,12 +51,13 @@ NODE* Set::tree_insert(string key, string file){	//Inserção de arvore binária
 	return z;
 }
 
-void Set::insertUsedFile(string fileName){
-	usedFiles->insert(fileName);
+void Set::insertUsedFile(string fileName, int i){
+	countF += 1;
+	usedFiles.push_back(fileName);
 }
 
-void Set::RB_insert(string key, string file){
-	NODE *z = tree_insert(key, file);
+void Set::RB_insert(string key, int i){
+	NODE *z = tree_insert(key, i);
 	if(z == NULL){ 
 		return;
 	}	
@@ -169,7 +158,7 @@ bool Set::search(string val){
 void Set::INORDER_TREE_WALK(NODE *root){	//Percorre a arvore in ordem
 	if(root != this->Nil){
 		INORDER_TREE_WALK(root->left);
-		cout << root->key << "-" << root->count+1 << " ";
+		cout << root->key << "-" << root->globalFreq+1 << " ";
 		INORDER_TREE_WALK(root->right);
 	}
 }	
@@ -191,7 +180,6 @@ void Set::postOrderDelete(NODE *n){	//Deleta os nós em pos ordem
 	if (n != this->Nil){   
         postOrderDelete(n->left);       
         postOrderDelete(n->right);
-		delete n->files;		
 		delete n;
 	}
 }
@@ -225,7 +213,7 @@ void Set::merge(NODE **arr, int l, int m, int r){
     /* Intercala os arrays temporários em arr[l..r]*/
     i = 0; j = 0; k = l;
     while (i < n1 && j < n2){
-        if (L[i]->files->getFreqT() > R[j]->files->getFreqT()){
+        if (L[i]->globalFreq > R[j]->globalFreq){
             arr[k] = L[i];
             i++;
         }
@@ -259,7 +247,7 @@ void Set::mergeSort(NODE **arr, int l, int r){
 }
 
 
-void merge1(NODE **arr, int l, int m, int r,string file){
+void Set::merge(NODE **arr, int l, int m, int r, int file, bool sortType){
 	int i, j, k;
     int n1 = m - l + 1;
     int n2 =  r - m;
@@ -274,15 +262,26 @@ void merge1(NODE **arr, int l, int m, int r,string file){
     /* Intercala os arrays temporários em arr[l..r]*/
     i = 0; j = 0; k = l;
     while (i < n1 && j < n2){
-        if (L[i]->files->getFreq(file) > R[j]->files->getFreq(file)){
-            arr[k] = L[i];
-            i++;
-        }
-        else{
-            arr[k] = R[j];
-            j++;
-        }
-        k++;
+		if(sortType){		    
+			if (L[i]->localFreq[file] > R[j]->localFreq[file]){
+				arr[k] = L[i];
+				i++;
+			}else{
+				arr[k] = R[j];
+				j++;
+			}
+			k++;
+		}else{
+			if (L[i]->key > R[j]->key){
+        		arr[k] = L[i];
+        		i++;
+        	}
+        	else{
+        	    arr[k] = R[j];
+        	    j++;
+        	}
+        	k++;
+		}
     }
  
     /* Copia os elementos restantes em L[], se existe algum */
@@ -298,64 +297,24 @@ void merge1(NODE **arr, int l, int m, int r,string file){
     }
 }
 
-void mergeSort1(NODE **arr, int l, int r, string file){
+void Set::mergeSort(NODE **arr, int l, int r, int file, bool sortType){
 	if (l < r){
         int m = l+(r-l)/2; //O mesmo que (l+r)/2, mas evita overflow para valores grandes de l e h
-        mergeSort1(arr, l, m, file);
-        mergeSort1(arr, m+1, r,file);
-        merge1(arr, l, m, r,file);
+        mergeSort(arr, l, m, file, sortType);
+        mergeSort(arr, m+1, r,file, sortType);
+        merge(arr, l, m, r,file, sortType);
     }
 }
 
-void merge2(NODE **arr, int l, int m, int r,string file){
-	int i, j, k;
-    int n1 = m - l + 1;
-    int n2 =  r - m;
- 
-    /* Cria arrays temporários */
-    NODE *L[n1], *R[n2];
- 
-    /* Copia dados para arrays temporários L e R */
-    for(i = 0; i < n1; i++) L[i] = arr[l + i];
-    for(j = 0; j < n2; j++) R[j] = arr[m + 1+ j];
- 
-    /* Intercala os arrays temporários em arr[l..r]*/
-    i = 0; j = 0; k = l;
-    while (i < n1 && j < n2){
-        if (L[i]->key > R[j]->key){
-            arr[k] = L[i];
-            i++;
-        }
-        else{
-            arr[k] = R[j];
-            j++;
-        }
-        k++;
-    }
- 
-    /* Copia os elementos restantes em L[], se existe algum */
-    while (i < n1){
-        arr[k] = L[i];
-        i++; k++;
-    }
- 
-    /* Copia os elementos restantes em R[], se existe algum */
-    while (j < n2){
-        arr[k] = R[j];
-        j++; k++;
-    }
-}
-
-void mergeSort2(NODE **arr, int l, int r, string file){
-	if (l < r){
-        int m = l+(r-l)/2; //O mesmo que (l+r)/2, mas evita overflow para valores grandes de l e h
-        mergeSort2(arr, l, m, file);
-        mergeSort2(arr, m+1, r,file);
-        merge2(arr, l, m, r,file);
-    }
-}
 void Set::displayUsedFiles(){
-	usedFiles->display();
+	for(unsigned int i = 0; i < usedFiles.size(); i++){
+		if(i%10 != 0 || i == 0){	
+			cout << usedFiles[i] << " | ";
+		}else{
+			cout << usedFiles[i] << endl;
+		}
+	}
+	cout << endl;
 }
 
 void Set::displayXmoreFrequent(int X){
@@ -366,8 +325,8 @@ void Set::displayXmoreFrequent(int X){
 	}	
 	if(X <= N){
 		for(int i = 0; i < X; i++){	//Imprime os X nós mais frequentes	
-				cout << sortedNodes->array[i]->key << " - " << sortedNodes->array[i]->count << " occurrences" << endl; 
-				output << sortedNodes->array[i]->key << " " << sortedNodes->array[i]->count << endl;	
+				cout << sortedNodes->array[i]->key << " - " << sortedNodes->array[i]->globalFreq << " occurrences" << endl; 
+				output << sortedNodes->array[i]->key << " " << sortedNodes->array[i]->globalFreq << endl;	
 		}
 	}else cerr << "Size exceeded!" << endl;
 	output.close();
@@ -377,38 +336,51 @@ void Set::displayXmoreFrequent(int X){
 void Set::displayXmoreFrequentByFile(string fileName, int X){
 		ofstream output("Output/opt3.txt", ios::out);		//Abre arquivo de saída
 		output << fileName + "\n" << endl;
-		vector<pair<int, string> > temp;
+		int fileIndex = 0;		
 		Container* arr = new Container(X);
-		if(X <= N){			
+		for(int i = 0; i <= nFiles; i++){
+			if(i == nFiles){
+				cerr << "\033[1;31mFile does not exist on DB!\033[0m" << endl;
+				return;
+			}
+			string file = usedFiles.at(i);
+			if(fileName == file){
+				fileIndex = i;
+				break;
+			}	
+		}
+		//if(X <= 1000){			
 			for(int i = 0, j = 0; j != X; i++){
-				int freq = sortedNodes->array[i]->files->getFreq(fileName);				
-				if(freq != -1){				
-					//cout << sortedNodes->array[i]->key << " - " << freq << " occurrences" << endl;
+				int freq = sortedNodes->array[i]->localFreq[fileIndex];
+				if(freq > 0){				
 					arr->push_back(sortedNodes->array[i]);					
-					//NodeInfo inf = make_pair(freq, sortedNodes->array[i]->key);
-				//	temp.insert(temp.begin(),inf);
 					output << sortedNodes->array[i]->key << " " << freq << endl;
 					j++;
 				}
 			}
-			mergeSort2(arr->array,0,arr->count-1,fileName);
-			mergeSort1(arr->array,0, arr->count-1, fileName);
+			mergeSort(arr->array,0,arr->count-1, fileIndex, sortWord);
+			mergeSort(arr->array,0, arr->count-1, fileIndex, sortFreq);
 			
 			for(int i = 0; i < X; i++){
-				int freq = arr->array[i]->files->getFreq(fileName); 
+				int freq = arr->array[i]->localFreq[fileIndex]; 
 				cout << arr->array[i]->key << " " << freq << endl;
 			}
-/*			sort(temp.begin(), temp.end(), &comp);
-			stable_sort(temp.begin(),temp.end(), greater<NodeInfo>());
-			vector<NodeInfo>::iterator itr = temp.begin();
-			for(; itr != temp.end(); itr++){
-				cout << (*itr).first << " " << (*itr).second << endl; 
-			}*/
-		}else{
-			cerr << "Size exceeded!" << endl;
-		}
+		//}else{
+			//cerr << "Size exceeded!" << endl;
+		//}
 		output.close();
 		output.clear();
+}
+
+int Set::getFileNWords(string file){
+	int index;
+	for(int i = 0; i < nFiles; i++){
+		if(usedFiles[i] == file){
+			index = i;
+			break;
+		}
+	}	
+	return fileNWords[index];
 }
 
 Set::~Set(){ //Chama a deleção pos ordem 

@@ -1,35 +1,37 @@
 #ifndef Set_H_
 #define Set_H_
-#include <iostream>
 #include <assert.h>
-#include <string>
 #include <fstream>
-#include "Hash.h" 
+#include <cstring>
+#include <vector>
+#include <iostream>
 
 using namespace std;
 
 struct NODE{
 	string key;
-	Hash *files;
+	vector<int> localFreq;
 	NODE *right;
 	NODE *left;
 	NODE *p;
-	int count;
+	int globalFreq;
 	int pos;
 	bool ehVermelho;
 	NODE(string key, int nFiles){
-		files = new Hash(nFiles);
+		//files = new Hash(nFiles);
+		localFreq = vector<int>(nFiles);
 		this->key = key;
 		ehVermelho = false;
-		count = 1;
+		globalFreq = 1;
 	}
 	void addFile(string file){
-		this->files->insert(file);
+		//this->files->insert(file);
 	}
 	NODE(int nFiles){
-		files = new Hash(nFiles);
+		//files = new Hash(nFiles);
+		localFreq = vector<int>(nFiles);
 		ehVermelho = false;
-		count = 0;
+		globalFreq = 0;
 	}
 
 };
@@ -59,23 +61,27 @@ class Set{
 private:
 	NODE *root;
 	NODE *Nil;
-	Hash *usedFiles;
+	vector<string> usedFiles;
 	Container* sortedNodes;
+	vector<int> fileNWords;
 	int nFiles;
+	int countF;
 	int N;
 	long long int T;
 	void INORDER_TREE_WALK(NODE *root);
 	void RB_insertFixUp(NODE *z);
-	NODE* tree_insert(string key, string file);	
+	NODE* tree_insert(string key, int i);	
 	void leftRotate(NODE *x);
 	void rightRotate(NODE *x);
 	void TREE_SORT(NODE *root, Container *array) const;
 	void merge(NODE **arr, int l, int m, int r);
+	void merge(NODE **arr, int l, int m, int r, int file, bool sortType);
 	void mergeSort(NODE **arr, int l, int r);
+	void mergeSort(NODE **arr, int l, int r, int file, bool sortType);
 public:
 	Set(int nFiles);
-	void insertUsedFile(string fileName);
-	void RB_insert(string key, string file);
+	void insertUsedFile(string fileName, int i);
+	void RB_insert(string key, int i);
 	bool search(string val);
 	int getN(){return N;}
 	int getTotal(){return T;}
@@ -86,6 +92,7 @@ public:
 	int getNFiles(){return nFiles;}
 	Container* result();
 	void postOrderDelete(NODE *n);
+	int getFileNWords(string file);
 	Container* getSortedList();
 	~Set();
 };

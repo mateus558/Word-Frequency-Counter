@@ -31,7 +31,7 @@ template<class T> bool stack<T>::empty(){
 template<class T> void stack<T>::push(T data){
 	if(topo == tam-1){
 		std::cerr << "Stack overflow!" << std::endl;
-		assert(topo > tam-2);
+		assert(topo != tam-1);
 	}	
 	topo++;
 	N++;
@@ -47,8 +47,8 @@ template<class T> T stack<T>::top(){
 	topo = -1;
 	tam = 0;
 	delete [] pilha;
-}*/
-
+}
+*/
 template class stack<int>;
 template class stack<std::string>;
 template class stack<bool>;

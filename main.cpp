@@ -1,11 +1,10 @@
-#include "stack.h"
 #include "Set.h"
+#include "stack.h"
 #include <dirent.h>
 #include <ctime>
 #include <unistd.h>
 #include <ios>
 #include <sstream>
-#include <vector>
 #include <cstdlib>
 
 using namespace std;
@@ -26,11 +25,9 @@ bool validFile(string file);
 void runTimeAnal();
 void process_mem_usage(double& vm_usage, double& resident_set);
 
-string def = " ";
 Container *sortedNodes;	//Container para receber os nos ordenados
 stack<string> files2Process;	//Lista para os arquivos a serem processados
 Set *DB;	//Conjunto para adicionar as palavras (Arvore vermelho-preta)
-Set *file;	
 Container *sortedNodesFile;	//Container para receber os nos ordenados
 DIR *dpdf;
 bool erro;
@@ -109,7 +106,7 @@ void save2File(string fileName, Container *array){
 		exit(3);
 	}
 	for(int i = 0; i < array->count; i++){
-			output << array->array[i]->key << " " << array->array[i]->count << endl; 
+			output << array->array[i]->key << " " << array->array[i]->globalFreq << endl; 
 	}
 
 	output.close();
@@ -182,7 +179,7 @@ void opcao3(){
 		cout << "> ";
 		cin >> selFile;
 			
-		cout << "\nEnter X (Total size: " << DB->getN() << "): " << endl;
+		cout << "\nEnter X (Total size: " << DB->getFileNWords(selFile) << "): " << endl;
 		int X;
 		cin >> X;
 		cout << endl;
@@ -210,12 +207,12 @@ void opcao4(){
 			return;	
 		}
 		int i  = sortedNodes->count;	
-		while(i-- && sortedNodes->array[i]->count == 1);	//Leva o i na posição em que a frequencia 1 começa 
+		while(i-- && sortedNodes->array[i]->globalFreq == 1);	//Leva o i na posição em que a frequencia 1 começa 
 		i++;
 		if(i < sortedNodes->count){	//Imprime os nós de frequencia 1 se existirem
 			do{
-				cout << sortedNodes->array[i]->key << " - " << sortedNodes->array[i]->count << " occurrence"<< endl;
-				output << sortedNodes->array[i]->key << " " << sortedNodes->array[i]->count << endl;
+				cout << sortedNodes->array[i]->key << " - " << sortedNodes->array[i]->globalFreq << " occurrence"<< endl;
+				output << sortedNodes->array[i]->key << " " << sortedNodes->array[i]->globalFreq << endl;
 			}while(++i && i < sortedNodes->count);
 		}else{
 			cout << "Nao existem palavras que ocorrem apenas uma vez!" << endl;
@@ -347,6 +344,7 @@ void processFiles(){
 
 	//Abre arquivos contidos na lista
 	while(!temp.empty()){ 
+		DB->insertUsedFile(temp.top(), i);
 		string file2open = string("Input/") + string((temp.top()).c_str());
 		inFile[i].open(file2open, ios::in);				
 		cout << "Processing " << (temp.top()).c_str() << "..." << endl;
@@ -360,13 +358,12 @@ void processFiles(){
 			//Remove caracteres especiais das palavra			
 			word = formatStr(word);
 			if(!word.empty()){
-				DB->RB_insert(word, temp.top());
+				DB->RB_insert(word, i);
 			}
 		}
 		inFile[i].close();
 		inFile[i].clear();
 		i++;
-		DB->insertUsedFile(temp.top());
 		temp.pop();
  	}
 }
@@ -390,13 +387,14 @@ void runTimeAnal(){
 	analysis << "N,Palavras Unicas,T(N)" << endl;
 	//Realiza os experimentos aumentando o número de arquivos processados em 1 a cada iteração do for principal
 	for(unsigned int i = 0; i <= temp->size(); i++){
-		DB = new Set(i);
+		Set *test = new Set(i);
 		clock_t start, finish;
 		start = clock();		
 		for(unsigned int j = 0; j < i; j++){
 			//Abre arquivo para processar as palavras
 			ifstream inFile[i];
 			string name = temp->at(j);
+			test->insertUsedFile(name, j);
 			inFile[j].open(string("Input/") + name.c_str(), ios::in);				
 			if(!inFile[j]){
 				cerr << "\033[1;31mFile could not be opened.\033[0m\n" << endl;
@@ -408,12 +406,12 @@ void runTimeAnal(){
 			//Remove caracteres especiais das palavras
 				word = formatStr(word);
 				if(!word.empty())
-					DB->RB_insert(word, name);
+					test->RB_insert(word, j);
 			}
 			inFile[j].close();
 			inFile[j].clear();
 		}
-		sortedNodes = DB->result();
+		sortedNodes = test->result();
 		finish = clock();	
 		double time = ((double)(finish - start))/CLOCKS_PER_SEC;
 		//Substitui o . no tempo double por ,
@@ -424,9 +422,9 @@ void runTimeAnal(){
 			if(t[n] == '.')
 				t[n] = ','; 
 		//Manda os resultados do experimento para o arquivo de saída
-		analysis << DB->getTotal() << "," << DB->getN() << "," << "\"" << t << "\"" << endl;
-		cout << DB->getTotal() << " " << DB->getN() << " " << " " << t << endl;
-		delete DB;
+		analysis << test->getTotal() << "," << test->getN() << "," << "\"" << t << "\"" << endl;
+		cout << test->getTotal() << " " << test->getN() << " " << " " << t << endl;
+		delete test;
 	}
 	analysis.close();
 	analysis.clear();
